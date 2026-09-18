@@ -8,6 +8,8 @@ Market is a reference implementation of a marketplace for multiple sellers of ph
 
 ## How it works
 
+For a complete walkthrough, read [setup from a fresh clone](docs/SETUP.md), [operating procedures and recovery](docs/OPERATIONS.md), and [implementation and development procedure](docs/IMPLEMENTATION.md). The shorter sections below provide an overview.
+
 The React interface talks to an Express API. SQLite stores accounts, listings and orders; private files hold digital products. The optional Docker setup routes requests through a Tor v3 onion service to an application on an internal Docker network. No HTTP or SOCKS port is published to the host.
 
 ```mermaid

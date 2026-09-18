@@ -49,3 +49,24 @@ Sellers arrange refunds outside the marketplace and can record a reference after
 ## Before real sales
 
 The adapter was checked against the [current Greenfield API specification](https://docs.btcpayserver.org/API/Greenfield/v1/) and tested with fixtures. A connected seller still needs a controlled BTC and XMR integration check covering exact amount, expiry, confirmation, download unlock, physical fulfillment, interrupted requests and refund handling. No real funds were sent during this build.
+
+## Controlled integration procedure
+
+Market does not install BTCPay. Follow the provider's [deployment documentation](https://docs.btcpayserver.org/Deployment/) and the [Monero plugin setup](https://github.com/btcpay-monero/btcpayserver-monero-plugin) on a separately managed seller instance. Record the installed versions privately. The plugin's daemon and wallet RPC settings belong to BTCPay, not Market's Compose environment. Verify compatibility with the installed version rather than assuming that enabling an asset in Market creates a wallet.
+
+After import, restart the app and inspect **Account**. Its connected indicator means that a valid configuration was loaded; it does not perform a live provider health test. No webhook endpoint or webhook secret is needed because this adapter polls invoices.
+
+For each asset independently, use separate buyer and seller accounts and disposable product data:
+
+1. Create and approve a small digital listing. Create an order and confirm the seller store, order UUID, currency and exact amount in BTCPay. Check that its checkout remains on the intended onion host.
+2. Before settlement, confirm that the buyer cannot download the product and an unrelated account cannot access the order. This check requires no transfer.
+3. If the operator explicitly chooses a live payment exercise, use an amount and fees they accept, on the network actually configured by the provider. The UI labels payments as mainnet; this repository supplies no testnet or regtest switch. Tests in `tests/` simulate payment responses without spending funds.
+4. Observe processing and settlement, then verify that only the owning buyer gains the download. Repeat the settled flow for a physical listing and check **Mark shipped** followed by **Confirm delivery received**.
+5. Test unpaid expiry through the full provider monitoring period. Test unavailable provider reads and interrupted invoice creation in an isolated environment. Confirm no duplicate invoice or premature stock release. Use fixtures for destructive fault scenarios unless the operator has a dedicated integration environment.
+6. Review partial and late payments without forcing fulfillment. If testing a refund, verify the external transfer separately before recording it in Market.
+
+Record provider versions, expected and observed states, and unresolved failures privately. Keep keys, real addresses, invoice URLs and customer data out of public test reports. Until these steps pass, describe the seller integration as unverified. See [incident procedures](OPERATIONS.md#payment-incident-procedure) for ambiguous outcomes.
+
+## Credential rotation
+
+Issue a replacement store scoped API key in BTCPay, put it in a private import JSON with the same URL and store ID, repeat the `connect` command, and restart the app. Verify an existing invoice can still be read before revoking the old key, unless the old key is suspected compromised and needs immediate revocation. Protect or remove the host staging file according to your local data handling policy. The restart clears the container's temporary import copy, not the original host file or backups.
