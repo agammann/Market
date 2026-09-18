@@ -14,7 +14,11 @@ Private field tests cover authenticated encryption, random ciphertext, incorrect
 
 `pnpm build` passed. `pnpm audit --prod` reported no known vulnerabilities at check time. This is an advisory check, not a security audit.
 
-After the permission change, the normal test runner and Vite could not spawn subprocesses (`EPERM`). Running Node's supported `--test-isolation=none` mode verified all 12 latest tests successfully within the restricted workspace. The earlier build passed before the final frontend branding/privacy changes; the GitHub workflow supplies a fresh build check for the published source.
+After the permission change, the normal test runner and Vite could not spawn subprocesses (`EPERM`). Running Node's supported `--test-isolation=none` mode verified all 12 latest tests successfully within the restricted workspace. The earlier build passed before the final frontend branding/privacy changes. The prepared GitHub workflow will check the final frontend once the source is uploaded; no remote CI run is claimed.
+
+## GitHub handoff
+
+The repository was created and renamed to `agammann/Market`; its private visibility was verified in GitHub. Source is committed locally. Upload was blocked: Git returned `SEC_E_NO_CREDENTIALS` under the restricted session, and GitHub mutation tools required approval unavailable under the session's policy. The remote repository currently has only its initial README. Open `Publish Source.cmd` in a normal terminal with GitHub Git credentials available to push the committed source. It does not add or commit untracked runtime files.
 
 ## Live checks
 
