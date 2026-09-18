@@ -4,7 +4,7 @@ A private source marketplace for independent sellers of physical goods and digit
 
 ![Catalog](design/catalog-rendered.png)
 
-Private source repository: [agammann/Market](https://github.com/agammann/Market). The image shows the previously deployed catalog; current source uses Market casing and adds a privacy footer link. Run the start command below to deploy the latest source.
+Private source repository: [agammann/Market](https://github.com/agammann/Market). The image shows the current deployment, verified through Tor. Run the start command below to build or update your own deployment.
 
 ## Working functionality
 
