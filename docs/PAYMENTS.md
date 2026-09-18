@@ -6,7 +6,7 @@ The marketplace creates exact asset denominated BTCPay invoices. There is no exc
 
 Use a separate BTCPay Server instance per seller. The [Monero plugin documentation](https://github.com/btcpay-monero/btcpayserver-monero-plugin) states that its Monero wallet is shared across all stores on an instance. Multiple stores therefore do not isolate unrelated sellers' Monero wallets. The application rejects reused onion hosts across sellers; different hostnames alone cannot prove the wallets are isolated.
 
-The operator's existing personal BTCPay instance is not connected. This repository does not provision BTCPay, blockchain nodes, wallets, or a paid server.
+No BTCPay instance or account is bundled. This repository does not provision BTCPay, blockchain nodes, wallets, or a paid server. Operators configure their own seller connections only when they choose to run an instance.
 
 ## Connect an instance
 

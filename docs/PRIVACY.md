@@ -1,6 +1,6 @@
 # Privacy and operation
 
-The deployment has only a Tor v3 onion entry point. Docker publishes no ports. The app has only an internal network; BTCPay requests use Tor SOCKS. Onion identity keys stay in the Tor volume, while the app receives only the public hostname.
+An instance started with the supplied Docker setup has only a Tor v3 onion entry point. Docker publishes no ports. The app has only an internal network; BTCPay requests use Tor SOCKS. Onion identity keys stay in the Tor volume, while the app receives only the public hostname.
 
 Tor does not make account behavior, public reviews, deliveries or a compromised device anonymous. [Bitcoin transactions are public](https://bitcoin.org/en/protect-your-privacy). Monero does not remove information disclosed to sellers, wallets, payment software or the host operator.
 
@@ -42,6 +42,6 @@ The React interface needs JavaScript and does not work with it disabled. Brave T
 
 Keep Docker, Tor, Node, dependencies and the host patched. Run one app process per database. Functional tests do not replace independent security review or load testing. Host and Docker access can read or change marketplace data.
 
-## Private GitHub source
+## Source publication
 
-The repository is private, with no public Pages deployment or package. Git commits use the account's noreply email. Ignore files exclude runtime data, credentials, keys and local addresses. The actual live onion address is absent from committed files. GitHub still knows which account owns the repository; private visibility is access control, not anonymity from GitHub or authorized collaborators.
+This repository publishes application source and setup instructions, not a hosted marketplace. It has no GitHub Pages deployment. Ignore files exclude runtime data, credentials, keys and local addresses. Anyone running their own instance must keep those files out of source control. A public GitHub account and repository do not provide anonymity for the repository owner.
