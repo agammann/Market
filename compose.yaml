@@ -1,0 +1,55 @@
+name: onion-market
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    init: true
+    depends_on:
+      - tor
+    volumes:
+      - market-data:/app/data
+      - onion-public:/onion:ro
+    networks:
+      - private
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 768m
+    cpus: 2
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "node", "scripts/health.mjs"]
+      interval: 30s
+      timeout: 10s
+      start_period: 45s
+      retries: 3
+  tor:
+    build:
+      context: deploy
+      dockerfile: Tor.Dockerfile
+    restart: unless-stopped
+    init: true
+    volumes:
+      - tor-state:/var/lib/tor
+      - onion-public:/onion
+    networks:
+      - private
+      - outbound
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 384m
+    pids_limit: 64
+networks:
+  private:
+    internal: true
+  outbound: {}
+volumes:
+  market-data: {}
+  tor-state: {}
+  onion-public: {}

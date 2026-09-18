@@ -1,0 +1,16 @@
+node_modules
+dist
+data
+.env*
+.git
+design
+tests
+*.log
+*.sqlite*
+*.db
+*.key
+btcpay*.json
+hostname
+onion-address*
+backups
+work
