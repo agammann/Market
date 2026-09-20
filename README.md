@@ -23,7 +23,7 @@ flowchart LR
 
 Accounts use pseudonyms. Sellers upload physical or digital listings, and an administrator approves them. Buyers reserve stock and receive an invoice from the seller's BTCPay instance. The application verifies invoice identity, currency, amount and settlement before enabling fulfillment. Digital purchases unlock a protected download; physical purchases use shipping updates. Order participants can exchange private messages and buyers can review fulfilled purchases.
 
-The application does not hold wallet keys, pool customer balances or provide escrow. Payment tests use explicit fixtures; a real seller must configure and verify their own connection. See [payment setup](docs/PAYMENTS.md).
+The application does not hold wallet keys, pool customer balances or provide escrow. The automated suite uses payment fixtures; a separate disposable integration run also completed actual Bitcoin regtest and Monero fakechain transfers through BTCPay. Each seller must configure and verify their own connection. See [payment setup](docs/PAYMENTS.md).
 
 ## Explore and test locally
 
@@ -85,7 +85,7 @@ The running server can decrypt private fields. This protects a database copy wit
 
 ## Verification and limits
 
-[Verification notes](docs/VERIFICATION.md) distinguish automated checks, temporary development checks and unverified real payments. [Design notes](design/SPEC.md) record the interface research and visual comparison.
+[Verification notes](docs/VERIFICATION.md) document automated checks, actual test coin settlement, browser workflows over Tor, outage recovery and a backup restoration drill. Mainnet payments and independent user testing remain unverified. [Design notes](design/SPEC.md) record the interface research and visual comparison.
 
 JavaScript is required. There is no automatic retention cleanup, account deletion or recovery, arbitration, marketplace commission, multi seller cart, email delivery, automated refunds or custody. Recording a refund records a seller statement and disables downloads; it does not send or independently verify a transfer. Partial payments and ambiguous invoice creation can require operator review. Functional tests are not a security audit or a guarantee of anonymity.
 

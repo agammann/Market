@@ -8,7 +8,7 @@ const db = openDatabase(dataDir);
 try {
   if (!["promote", "connect"].includes(command) || !username)
     throw Error(
-      "Usage: node scripts/admin.mjs promote USERNAME | connect USERNAME PRIVATE_JSON_FILE",
+      "Usage: node scripts/admin.mjs promote USERNAME | connect USERNAME PRIVATE_JSON_FILE_OR_-",
     );
   const user = db
     .prepare("SELECT id FROM users WHERE username=?")
@@ -22,10 +22,17 @@ try {
       throw Error(
         "Provide a private JSON file containing url, storeId, apiKey and assets.",
       );
-    const entry = {
-      ...JSON.parse(readFileSync(configPath, "utf8")),
-      sellerId: user.id,
-    };
+    let configuration;
+    try {
+      configuration = JSON.parse(
+        readFileSync(configPath === "-" ? 0 : configPath, "utf8"),
+      );
+    } catch {
+      throw Error(
+        "Could not read valid connection JSON. Use a readable file or - for standard input.",
+      );
+    }
+    const entry = { ...configuration, sellerId: user.id };
     const file = path.join(dataDir, "btcpay.json");
     const old = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : [];
     const existing = old.find((c) => c.sellerId === user.id);

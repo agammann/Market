@@ -23,7 +23,7 @@ The React UI calls same origin API routes. Sessions identify a pseudonymous acco
 
 Listing creation and edits go to moderation. Order creation snapshots the product and amount while reserving stock in a database transaction. Monetary calculations use integer atomic units rather than floating point arithmetic. The payment adapter sends an order UUID, currency, amount and checkout options to the configured seller instance through a proxy with remote DNS resolution. It excludes product names, delivery data and private conversations.
 
-The app persists that invoice creation was attempted before sending its POST. A lost response triggers lookup by order reference; the app does not blindly create a duplicate invoice. Subsequent reads validate store, invoice, order reference, asset and exact amount. Provider settlement unlocks the relevant fulfillment path. [Payment documentation](PAYMENTS.md) explains the external trust boundary and incomplete integration verification.
+The app persists that invoice creation was attempted before sending its POST. A lost response triggers lookup by order reference; the app does not blindly create a duplicate invoice. Subsequent reads validate store, invoice, order reference, asset and exact amount. Provider settlement unlocks the relevant fulfillment path. [Payment documentation](PAYMENTS.md) explains the external trust boundary and checks needed for each seller installation.
 
 ## Privacy design decisions
 
@@ -39,8 +39,9 @@ Passwords use salted scrypt hashes, sessions use random tokens stored as hashes,
 4. Check encrypted field handling, malformed payment data, interrupted invoice creation, partial payment and expiry paths. Keep provider uncertainty visible instead of granting fulfillment by assumption.
 5. Build the frontend and Docker images. Use a temporary development instance to inspect Tor connectivity and responsive rendering. Preserve screenshots as previews without publishing an operator address.
 6. Remove the temporary instance, data volumes and onion identity when converting the project to a source reference. Review source, reachable Git history and artifacts for deployment addresses and sensitive runtime files before publication.
+7. Run a fresh public clone with an isolated BTCPay instance and actual BTC regtest and XMR fakechain transfers. Exercise buyer, seller and administrator workflows through Tor, stop the provider to check outage handling, and restore stopped data volumes into a separate Compose project. Fix defects demonstrated by those checks and rerun affected workflows before removing all temporary hosting.
 
-The [verification record](VERIFICATION.md) identifies what was actually checked. Live BTC/XMR settlement, restoration drills and independent security review are separate work and are not claimed complete.
+The [verification record](VERIFICATION.md) identifies what was actually checked, the versions used and remaining boundaries. Test chain settlement and a same host restoration drill passed. Mainnet settlement, independent user testing and an independent security review are not claimed complete.
 
 ## Reproduce the software checks
 

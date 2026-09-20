@@ -195,7 +195,8 @@ export function OrderDetail() {
                   Order amount: {o.total} {o.currency}
                 </strong>
                 <br />
-                {assetLabels[o.currency]} mainnet.
+                {assetLabels[o.currency]}. Confirm the network on the seller's
+                BTCPay invoice before paying.
               </p>
               {data.payment ? (
                 <a

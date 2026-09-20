@@ -63,7 +63,7 @@ Back up all three named volumes as one stopped snapshot:
 | `onion-market_tor-state` | `/var/lib/tor` | Tor state and private onion identity in `market/` |
 | `onion-market_onion-public` | `/onion` | Public hostname shared with the app |
 
-The following **Bash example for a Linux Docker host** archives stopped volumes while preserving Unix ownership and permissions. It is a documented procedure, not a completed restoration test. On Windows, use a Linux shell with working Docker access or equivalent volume snapshot tooling; do not paste Bash loops into PowerShell. Replace the example path with an existing private location on encrypted storage. These archives contain secrets and are not themselves encrypted by `tar`.
+The following **Bash example for a Linux Docker host** archives stopped volumes while preserving Unix ownership and permissions. The same tar archive and extraction procedure was exercised with Linux helper containers on Docker Desktop, restoring into fresh volumes in a separate Compose project on the same host. See the [verification record](VERIFICATION.md); recovery on a different host remains untested. On Windows, use a Linux shell with working Docker access or equivalent volume snapshot tooling; do not paste Bash loops into PowerShell. Replace the example path with an existing private location on encrypted storage. These archives contain secrets and are not themselves encrypted by `tar`.
 
 ```bash
 backup_dir=/absolute/private/backup-directory
@@ -101,6 +101,8 @@ done
 ```
 
 This rejects existing volumes rather than overwriting live data. If it stops partway, investigate the partial restore before retrying. Verify restored ownership against the app and Tor image users. Inspect the restored SQLite database with `PRAGMA integrity_check` using a compatible SQLite tool while it remains offline. Only start services once you intend to resume hosting. Confirm the hostname matches the private backup record, the app is healthy, existing private fields decrypt and owned digital files download. A full recovery exercise should use disposable data first; merely creating archives is not proof of recoverability. Record the result privately.
+
+SQLite WAL mode can require writable space for shared memory and journal sidecars even during a read check. Run the integrity check against the stopped restored copy with appropriate filesystem access. Compose may warn that manually restored volumes were not created by Compose. Confirm the exact volume names before starting; a differently named empty volume is not your restored data.
 
 Losing `private-fields.key` makes encrypted fields unreadable. Losing the Tor identity changes the service address. Restoring an old application database does not roll back payments already recorded externally in BTCPay; reconcile intervening invoices before reopening sales.
 

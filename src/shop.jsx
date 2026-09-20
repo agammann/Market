@@ -353,8 +353,9 @@ export function Listing() {
             </ActionForm>
           )}
           <p className="muted small">
-            Network: {assetLabels[l.currency]} mainnet. Order amounts are fixed
-            in {l.currency}; no exchange rate is applied.
+            Payment asset: {assetLabels[l.currency]}. Confirm the network on the
+            seller's BTCPay invoice before paying. Order amounts are fixed in{" "}
+            {l.currency}; no exchange rate is applied.
           </p>
         </section>
       </div>
