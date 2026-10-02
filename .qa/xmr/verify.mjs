@@ -5,6 +5,7 @@ import {spawn, execFileSync} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {pathToFileURL} from 'node:url';
 import {chromium} from 'playwright';
+import {marketHealth} from './health.mjs';
 
 assert.equal(process.env.GITHUB_ACTIONS, 'true');
 assert.equal(process.env.RUNNER_OS, 'Linux');
@@ -68,6 +69,13 @@ function startMarket() {
   market = spawn(process.execPath, ['server/index.mjs'], {cwd: app, env: appEnv, stdio: ['ignore', log, log]});
   fs.writeFileSync(path.join(root, 'market.pid'), String(market.pid));
   fs.closeSync(log);
+}
+async function marketReady(host) {
+  const facts = await marketHealth(host);
+  report.marketReadiness = {...facts, processExitCode: market?.exitCode ?? null,
+    processSignal: market?.signalCode ?? null};
+  save();
+  return facts.ready;
 }
 async function stopMarket() {
   if (!market || market.exitCode !== null) return;
@@ -147,10 +155,7 @@ try {
 
   stage = 'market_registration'; save();
   startMarket();
-  await bounded(async () => {
-    const r = await fetch('http://127.0.0.1:43890/api/session', {headers: {Host: host}, signal: AbortSignal.timeout(5000)});
-    return r.ok;
-  }, 90);
+  await bounded(() => marketReady(host), 90);
   browser = await chromium.launch({executablePath, headless: true, chromiumSandbox: true,
     proxy: {server: 'socks5://127.0.0.1:43889'}});
   const users = {};
@@ -178,7 +183,7 @@ try {
   admin(['promote', 'trial_admin']);
   admin(['connect', 'trial_seller', '-'], JSON.stringify(connection));
   startMarket();
-  await bounded(async () => (await fetch('http://127.0.0.1:43890/api/session', {headers: {Host: host}})).ok, 60);
+  await bounded(() => marketReady(host), 60);
   const api = async (role, method, route, body) => users[role].page.evaluate(async ({method, route, body, csrf}) => {
     const r = await fetch('/api' + route, {method, headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf}, body: body ? JSON.stringify(body) : undefined});
     const text = await r.text();
