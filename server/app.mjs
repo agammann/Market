@@ -56,6 +56,17 @@ export function createApp({
   const q = (sql, ...args) => db.prepare(sql).get(...args);
   const all = (sql, ...args) => db.prepare(sql).all(...args);
   const run = (sql, ...args) => db.prepare(sql).run(...args);
+  function pagination(total, value = "0") {
+    const requested =
+      typeof value === "string" && /^\d+$/.test(value) ? Number(value) : NaN;
+    if (!Number.isSafeInteger(requested)) fail(400, "Choose a valid page.");
+    const pageSize = 24;
+    return {
+      total,
+      page: Math.min(requested, Math.max(0, Math.ceil(total / pageSize) - 1)),
+      pageSize,
+    };
+  }
   const audit = (actor, action, target) =>
     run(
       "INSERT INTO audit VALUES(?,?,?,?,?)",
@@ -191,7 +202,7 @@ export function createApp({
   });
   app.use(express.json({ limit: "64kb" }));
   app.use(cookieParser());
-  app.use("/api", (req, res, next) => {
+  app.use(["/api", "/media"], (req, res, next) => {
     res.set("Cache-Control", "no-store");
     const raw = req.cookies.market_session;
     if (typeof raw === "string" && /^[a-f0-9]{64}$/.test(raw)) {
@@ -390,13 +401,18 @@ export function createApp({
   );
   app.get("/media/:id", (req, res) => {
     const upload = q(
-      "SELECT u.* FROM uploads u JOIN listings l ON l.image_id=u.id WHERE u.id=? AND u.kind='image' AND l.status='active'",
+      "SELECT u.*,l.status AS listing_status FROM uploads u JOIN listings l ON l.image_id=u.id WHERE u.id=? AND u.kind='image' AND (l.status='active' OR l.seller_id=? OR ?='admin') ORDER BY CASE WHEN l.status='active' THEN 0 ELSE 1 END LIMIT 1",
       req.params.id,
+      req.user?.id || "",
+      req.user?.role || "",
     );
     if (!upload) fail(404, "Image not found.");
     res
       .type("webp")
-      .set("Cache-Control", "private,max-age=300")
+      .set(
+        "Cache-Control",
+        upload.listing_status === "active" ? "private,max-age=300" : "no-store",
+      )
       .sendFile(path.resolve(filesDir, upload.id));
   });
   const serializeListing = (l) => ({
@@ -708,15 +724,26 @@ export function createApp({
     await syncPayment(id).catch(() => {});
     res.status(201).json({ id });
   });
-  app.get("/api/orders", requireUser, (req, res) =>
-    res.json(
-      all(
-        "SELECT o.*,u.username AS seller,b.username AS buyer FROM orders o JOIN users u ON u.id=o.seller_id JOIN users b ON b.id=o.buyer_id WHERE buyer_id=? OR seller_id=? ORDER BY created_at DESC LIMIT 200",
+  app.get("/api/orders", requireUser, (req, res) => {
+    const view = req.query.view ?? "buying";
+    if (!["buying", "selling"].includes(view))
+      fail(400, "Choose purchases or sales.");
+    const column = view === "buying" ? "buyer_id" : "seller_id";
+    const total = q(
+      `SELECT COUNT(*) AS total FROM orders WHERE ${column}=?`,
+      req.user.id,
+    ).total;
+    const page = pagination(total, req.query.page);
+    res.json({
+      ...page,
+      items: all(
+        `SELECT o.*,u.username AS seller,b.username AS buyer FROM orders o JOIN users u ON u.id=o.seller_id JOIN users b ON b.id=o.buyer_id WHERE o.${column}=? ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`,
         req.user.id,
-        req.user.id,
+        page.pageSize,
+        page.page * page.pageSize,
       ).map(serializeOrder),
-    ),
-  );
+    });
+  });
   app.post("/api/orders/:id/refresh", requireUser, async (req, res) => {
     const o = orderFor(req.params.id, req.user);
     try {
@@ -865,16 +892,30 @@ export function createApp({
     );
     res.status(201).json({ ok: true });
   });
-  app.get("/api/admin", requireUser, requireAdmin, (req, res) =>
+  app.get("/api/admin", requireUser, requireAdmin, (req, res) => {
+    const listingPagination = pagination(
+      q("SELECT COUNT(*) AS total FROM listings").total,
+      req.query.listingPage,
+    );
+    const reportPagination = pagination(
+      q("SELECT COUNT(*) AS total FROM reports WHERE status='open'").total,
+      req.query.reportPage,
+    );
     res.json({
+      listingPagination,
+      reportPagination,
       listings: all(
-        `SELECT ${listingColumns} FROM listings l JOIN users u ON u.id=l.seller_id ORDER BY l.created_at DESC LIMIT 300`,
+        `SELECT ${listingColumns} FROM listings l JOIN users u ON u.id=l.seller_id ORDER BY CASE WHEN l.status='pending' THEN 0 ELSE 1 END,l.updated_at DESC,l.id DESC LIMIT ? OFFSET ?`,
+        listingPagination.pageSize,
+        listingPagination.page * listingPagination.pageSize,
       ).map(serializeListing),
       reports: all(
-        "SELECT r.*,l.title FROM reports r JOIN listings l ON l.id=r.listing_id WHERE r.status='open' ORDER BY r.created_at DESC LIMIT 200",
+        "SELECT r.*,l.title FROM reports r JOIN listings l ON l.id=r.listing_id WHERE r.status='open' ORDER BY r.created_at DESC,r.id DESC LIMIT ? OFFSET ?",
+        reportPagination.pageSize,
+        reportPagination.page * reportPagination.pageSize,
       ),
-    }),
-  );
+    });
+  });
   app.post("/api/admin/listings/:id", requireUser, requireAdmin, (req, res) => {
     if (!["active", "rejected", "paused"].includes(req.body.status))
       fail(400, "Invalid moderation action.");

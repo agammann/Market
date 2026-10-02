@@ -80,8 +80,8 @@ Production waits for the public hostname file and accepts that exact Host and or
 2. Register separate fictional seller and buyer accounts while validating setup. Any registered member can use **Sell**; promotion is only needed for administration.
 3. Connect each seller's own BTCPay installation using the [payment guide](PAYMENTS.md). **Account** shows configured assets. This display confirms configuration loaded, not that the external wallet is reachable or synchronized.
 4. In **Sell**, create a listing with title, description, category, stock and a BTC or XMR price. Digital listings require an uploaded product file. Physical listings require shipping regions and a flat shipping amount in the same currency. Product uploads have a 50 MiB request limit.
-5. In **Admin**, review the listing and select **Approve**, **Reject** or **Pause**. New listings and edits need approval. An empty catalog on a new installation is expected.
-6. Validate the buyer flow described in [operations](OPERATIONS.md) and the controlled integration checklist in [payments](PAYMENTS.md) before offering real products. There is no included live payment verification result.
+5. In **Admin**, review the listing and select **Approve**, **Reject** or **Pause**. New listings and edits need approval and appear first in the paginated review list. Their photos are visible to their seller and administrators before publication. An empty catalog on a new installation is expected.
+6. Validate the buyer flow described in [operations](OPERATIONS.md) and the controlled integration checklist in [payments](PAYMENTS.md) before offering real products. The [historical test coin results](VERIFICATION.md) do not verify your own seller connection.
 
 ## 5. Configuration reference
 

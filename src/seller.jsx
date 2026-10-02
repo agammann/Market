@@ -436,14 +436,56 @@ export function ListingEditor() {
     </main>
   );
 }
+function AdminPages({ label, pagination, onPage }) {
+  if (pagination.total <= pagination.pageSize) return null;
+  return (
+    <nav className="pagination" aria-label={label + " pages"}>
+      <button
+        className="secondary"
+        disabled={pagination.page === 0}
+        onClick={() => onPage(pagination.page - 1)}
+      >
+        Previous
+      </button>
+      <span>
+        Page {pagination.page + 1} of{" "}
+        {Math.ceil(pagination.total / pagination.pageSize)}
+      </span>
+      <button
+        className="secondary"
+        disabled={
+          (pagination.page + 1) * pagination.pageSize >= pagination.total
+        }
+        onClick={() => onPage(pagination.page + 1)}
+      >
+        Next
+      </button>
+    </nav>
+  );
+}
 export function Admin() {
   const { user } = useSession();
-  const [data, setData] = useState(null);
+  const [result, setResult] = useState(null);
   const [error, setError] = useState("");
-  const reload = () => api("/admin").then(setData);
+  const [listingPage, setListingPage] = useState(0);
+  const [reportPage, setReportPage] = useState(0);
+  const [revision, setRevision] = useState(0);
+  const query = `?listingPage=${listingPage}&reportPage=${reportPage}`;
+  const reload = () => setRevision((value) => value + 1);
   useEffect(() => {
-    reload().catch((e) => setError(e.message));
-  }, []);
+    let active = true;
+    setError("");
+    api("/admin" + query)
+      .then((data) => active && setResult({ query, revision, data }))
+      .catch((e) => active && setError(e.message));
+    return () => {
+      active = false;
+    };
+  }, [query, revision]);
+  const data =
+    result?.query === query && result.revision === revision
+      ? result.data
+      : null;
   const moderate = async (id, status) => {
     try {
       await api("/admin/listings/" + id, { method: "POST", body: { status } });
@@ -468,6 +510,9 @@ export function Admin() {
       ) : (
         <>
           <h2>Listings</h2>
+          <p className="muted">
+            Pending submissions appear first, including edits to older listings.
+          </p>
           <section className="panel table-wrap">
             <table>
               <thead>
@@ -513,6 +558,11 @@ export function Admin() {
               <p className="pad">No listings to review.</p>
             )}
           </section>
+          <AdminPages
+            label="Listing"
+            pagination={data.listingPagination}
+            onPage={setListingPage}
+          />
           <h2>Open reports</h2>
           {data.reports.length ? (
             data.reports.map((r) => (
@@ -542,6 +592,11 @@ export function Admin() {
           ) : (
             <p>No open reports.</p>
           )}
+          <AdminPages
+            label="Report"
+            pagination={data.reportPagination}
+            onPage={setReportPage}
+          />
         </>
       )}
     </main>

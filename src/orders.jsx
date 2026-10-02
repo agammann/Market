@@ -4,42 +4,51 @@ import { api, statusLabel, assetLabels } from "./api";
 import { ActionForm, Field, Notice, Busy, Empty } from "./ui";
 import { useSession } from "./main";
 export function Orders() {
-  const { user } = useSession();
-  const [items, setItems] = useState(null);
-  const [error, setError] = useState("");
+  const [result, setResult] = useState(null);
   const [view, setView] = useState("buying");
+  const [page, setPage] = useState(0);
+  const query = `?view=${view}&page=${page}`;
   useEffect(() => {
-    api("/orders")
-      .then(setItems)
-      .catch((e) => setError(e.message));
-  }, []);
-  const filtered = items?.filter((o) =>
-    view === "buying" ? o.buyer_id === user.id : o.seller_id === user.id,
-  );
+    let active = true;
+    api("/orders" + query)
+      .then((data) => active && setResult({ query, data }))
+      .catch((e) => active && setResult({ query, error: e.message }));
+    return () => {
+      active = false;
+    };
+  }, [query]);
+  const data = result?.query === query ? result.data : null;
+  const error = result?.query === query ? result.error : "";
+  const changeView = (next) => {
+    setView(next);
+    setPage(0);
+  };
   return (
     <main className="page">
       <h1>Your orders</h1>
       <div className="tabs">
         <button
           className={view === "buying" ? "" : "secondary"}
-          onClick={() => setView("buying")}
+          aria-pressed={view === "buying"}
+          onClick={() => changeView("buying")}
         >
           Purchases
         </button>
         <button
           className={view === "selling" ? "" : "secondary"}
-          onClick={() => setView("selling")}
+          aria-pressed={view === "selling"}
+          onClick={() => changeView("selling")}
         >
           Sales
         </button>
       </div>
       {error ? (
         <Notice error>{error}</Notice>
-      ) : !items ? (
+      ) : !data ? (
         <Busy />
       ) : (
         <section className="panel">
-          {filtered.length ? (
+          {data.items.length ? (
             <div className="table-wrap">
               <table>
                 <thead>
@@ -51,7 +60,7 @@ export function Orders() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((o) => (
+                  {data.items.map((o) => (
                     <tr key={o.id}>
                       <td>
                         <Link to={"/orders/" + o.id}>{o.title}</Link>
@@ -83,6 +92,27 @@ export function Orders() {
                 {view === "buying" ? "Browse products" : "Manage listings"}
               </Link>
             </Empty>
+          )}
+          {data.total > data.pageSize && (
+            <div className="pagination">
+              <button
+                className="secondary"
+                disabled={data.page === 0}
+                onClick={() => setPage(data.page - 1)}
+              >
+                Previous
+              </button>
+              <span>
+                Page {data.page + 1} of {Math.ceil(data.total / data.pageSize)}
+              </span>
+              <button
+                className="secondary"
+                disabled={(data.page + 1) * data.pageSize >= data.total}
+                onClick={() => setPage(data.page + 1)}
+              >
+                Next
+              </button>
+            </div>
           )}
         </section>
       )}
