@@ -5,7 +5,7 @@ import {spawn, execFileSync} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {pathToFileURL} from 'node:url';
 import {chromium} from 'playwright';
-import {marketHealth} from './health.mjs';
+import {marketHealth, loopbackFacts, containerFacts} from './health.mjs';
 import {registrationFact, registrationPage} from './registration-diagnostics.mjs';
 
 assert.equal(process.env.GITHUB_ACTIONS, 'true');
@@ -243,12 +243,11 @@ try {
   const ok = async (...args) => {const r = await api(...args); assert.ok(r.status < 300, 'Market API rejected operation'); return r.body;};
 
   stage = 'loopback_guard'; save();
-  const listeners = execFileSync('ss', ['-H', '-lnt'], {encoding: 'utf8'}).split('\n');
-  const ports = [43881, 43882, 43883, 43884, 43885, 43886, 43887, 43888, 43889, 43890, 43891, 49393];
-  for (const port of ports) {
-    const endpoints = listeners.map(l => l.trim().split(/\s+/)[3]).filter(s => s?.endsWith(':' + port));
-    if (![43882, 43885, 43886].includes(port)) assert.ok(endpoints.length, 'Missing required listener');
-    assert.ok(endpoints.every(s => s === '127.0.0.1:' + port || s === '[::1]:' + port), 'Non-loopback listener');
+  report.listeners = loopbackFacts(execFileSync('ss', ['-H', '-lnt'], {encoding: 'utf8', timeout: 5000}));
+  save();
+  for (const fact of report.listeners) {
+    if (fact.required) assert.ok(fact.present, 'Missing required listener on port ' + fact.port);
+    assert.ok(fact.loopbackOnly, 'Non-loopback listener on port ' + fact.port);
   }
   pass('all_test_services_listen_only_on_loopback');
   const listings = {}, orders = {};
@@ -365,6 +364,17 @@ try {
   pass('no_browser_runtime_errors_and_fakechain_still_isolated');
   report.result = 'passed'; stage = 'complete'; save();
 } catch (error) {
+  try {
+    const project = process.env.COMPOSE_PROJECT_NAME;
+    assert.match(project, /^marketxmr[0-9]+a[0-9]+$/);
+    assert.equal(project, 'marketxmr' + process.env.GITHUB_RUN_ID + 'a' + process.env.GITHUB_RUN_ATTEMPT);
+    const ids = execFileSync('docker', ['ps', '-aq', '--filter', 'label=com.docker.compose.project=' + project],
+      {encoding: 'utf8', timeout: 10000}).trim().split(/\s+/);
+    assert.ok(ids.length > 0 && ids.length <= 8 && ids.every(id => /^[a-f0-9]{12,64}$/.test(id)));
+    const format = '{{index .Config.Labels "com.docker.compose.service"}} {{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}}';
+    report.services = containerFacts(execFileSync('docker', ['inspect', '--format', format, ...ids],
+      {encoding: 'utf8', timeout: 10000}));
+  } catch {report.serviceStateUnavailable = true;}
   if (registrationSnapshot) {
     try {await Promise.race([registrationSnapshot(), delay(5000).then(() => {throw Error('Diagnostic deadline');})]);}
     catch {report.registrationSnapshotIncomplete = true;}

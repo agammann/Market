@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import net from 'node:net';
 import {Duplex} from 'node:stream';
-import {marketHealth} from './health.mjs';
+import {marketHealth, loopbackFacts, containerFacts} from './health.mjs';
 
 const host = 'a'.repeat(56) + '.onion';
 const connect = net.Socket.prototype.connect;
@@ -47,4 +47,17 @@ test('rejected Host, network refusal and timeout retain only safe facts', async 
   assert.deepEqual(await marketHealth(host, {get: refused.get}), {ready: false, errorCode: 'ECONNREFUSED'});
   const silent = transport(0, {silent: true});
   assert.deepEqual(await marketHealth(host, {get: silent.get, timeoutMs: 10}), {ready: false, errorCode: 'HEALTH_TIMEOUT'});
+});
+
+test('listener and owned-service diagnostics distinguish missing, exposed and exited services', () => {
+  const facts = loopbackFacts('LISTEN 0 4096 127.0.0.1:43881 0.0.0.0:*\nLISTEN 0 4096 [::1]:43883 [::]:*\nLISTEN 0 511 0.0.0.0:43890 0.0.0.0:*');
+  assert.deepEqual(facts.find(f => f.port === 43891), {port: 43891, required: true, present: false, loopbackOnly: true});
+  assert.equal(facts.find(f => f.port === 43881).loopbackOnly, true);
+  assert.equal(facts.find(f => f.port === 43883).loopbackOnly, true);
+  assert.equal(facts.find(f => f.port === 43890).loopbackOnly, false);
+  assert.equal(facts.find(f => f.port === 43886).required, false);
+  assert.deepEqual(containerFacts('postgres running 0 false\nnbxplorer exited 1 false'), [
+    {service: 'postgres', state: 'running', exitCode: 0, oomKilled: false},
+    {service: 'nbxplorer', state: 'exited', exitCode: 1, oomKilled: false}]);
+  assert.throws(() => containerFacts('tor running 0 false private-value'), /Invalid service facts/);
 });

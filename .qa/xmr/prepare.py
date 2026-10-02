@@ -49,6 +49,8 @@ def prepare():
     services['postgres'] = service('library/postgres:18.4',
         environment={'POSTGRES_HOST_AUTH_METHOD': 'trust'},
         command=['postgres', '-c', 'listen_addresses=127.0.0.1', '-p', '43883'],
+        healthcheck={'test': ['CMD', 'pg_isready', '-h', '127.0.0.1', '-p', '43883', '-U', 'postgres', '-d', 'nbxplorer'],
+                     'interval': '2s', 'timeout': '3s', 'retries': 30, 'start_period': '5s'},
         volumes=['pg:/var/lib/postgresql', str(root / 'pg-init') + ':/docker-entrypoint-initdb.d:ro'])
     services['bitcoin'] = service('btcpayserver/bitcoin:31.1-1', entrypoint=['bitcoind'],
         command=['-datadir=/data', '-regtest', '-server', '-rpcuser=verification',
@@ -62,7 +64,8 @@ def prepare():
         'NBXPLORER_BTCNODEENDPOINT': '127.0.0.1:43882', 'NBXPLORER_BTCRPCUSER': 'verification',
         'NBXPLORER_BTCRPCPASSWORD': credentials['rpcPassword'],
         'NBXPLORER_POSTGRES': 'User ID=postgres;Host=127.0.0.1;Port=43883;Database=nbxplorer',
-        'NBXPLORER_NOAUTH': '1'}, depends_on=['postgres', 'bitcoin'])
+        'NBXPLORER_NOAUTH': '1'}, depends_on={'postgres': {'condition': 'service_healthy'},
+            'bitcoin': {'condition': 'service_started'}})
     services['monero'] = service('btcpayserver/monero:0.18.4.3', entrypoint=['monerod'],
         command=['--regtest', '--offline', '--keep-fakechain', '--fixed-difficulty=1',
                  '--rpc-bind-ip=127.0.0.1', '--rpc-bind-port=43884',
@@ -85,7 +88,8 @@ def prepare():
         'BTCPAY_XMR_WALLET_DAEMON_URI': 'http://127.0.0.1:43887',
         'BTCPAY_XMR_WALLET_DAEMON_WALLETDIR': '/wallet'},
         volumes=['btcpay:/datadir', str(root / 'plugins') + ':/plugins', str(root / 'seller') + ':/wallet'],
-        depends_on=['postgres', 'nbxplorer', 'seller-wallet'])
+        depends_on={'postgres': {'condition': 'service_healthy'},
+                    'nbxplorer': {'condition': 'service_started'}, 'seller-wallet': {'condition': 'service_started'}})
     torrc = '\n'.join(['DataDirectory /state/data', 'SocksPort 127.0.0.1:43889',
         'Log notice stdout', 'HiddenServiceDir /state/app', 'HiddenServiceVersion 3',
         'HiddenServicePort 80 127.0.0.1:43890', 'HiddenServiceDir /state/provider',
