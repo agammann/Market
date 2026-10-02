@@ -23,7 +23,7 @@ flowchart LR
 
 Accounts use pseudonyms. Sellers upload physical or digital listings, and an administrator approves them. Buyers reserve stock and receive an invoice from the seller's BTCPay instance. The application verifies invoice identity, currency, amount and settlement before enabling fulfillment. Digital purchases unlock a protected download; physical purchases use shipping updates. Order participants can exchange private messages and buyers can review fulfilled purchases.
 
-The application does not hold wallet keys, pool customer balances or provide escrow. The automated suite uses payment fixtures; a separate disposable integration run also completed actual Bitcoin regtest and Monero fakechain transfers through BTCPay. Each seller must configure and verify their own connection. See [payment setup](docs/PAYMENTS.md).
+The application does not hold wallet keys, pool customer balances or provide escrow. The automated suite uses payment fixtures; separate disposable integration runs also completed actual Bitcoin regtest and Monero fakechain transfers through BTCPay. Each seller must configure and verify their own connection. See [payment setup](docs/PAYMENTS.md).
 
 ## Explore and test locally
 
@@ -65,7 +65,7 @@ To remove your instance and permanently discard its database, files and onion id
 docker compose down --volumes --remove-orphans
 ```
 
-Deleting the Tor identity means a later setup generates a new address. Docker builds and test commands are available for reproducibility; GitHub Actions only tests and builds source and does not deploy a service.
+Deleting the Tor identity means a later setup generates a new address. Docker builds and test commands are available for reproducibility; the default-branch GitHub Actions workflow tests and builds source without deploying a service.
 
 ## First administrator and seller
 
@@ -87,7 +87,7 @@ The running server can decrypt private fields. This protects a database copy wit
 
 ## Verification and limits
 
-[Verification notes](docs/VERIFICATION.md) separate the October 2 local checks and native Bitcoin regtest follow-up from the September 19 Bitcoin and Monero integration. The fresh Bitcoin run exercised purchases through Tor, provider outage recovery and same-host backup restoration. Fresh Monero settlement remains blocked by the Windows wallet RPC environment; mainnet payments and independent user testing remain unverified. [Design notes](design/SPEC.md) record the interface research and visual comparison.
+[Verification notes](docs/VERIFICATION.md) separate the October 2 local checks, native Bitcoin regtest follow-up and disposable Linux Monero follow-up from the September 19 integration. The fresh Bitcoin run exercised purchases through Tor, provider outage recovery and same-host backup restoration. The [Monero follow-up](https://github.com/agammann/Market/actions/runs/37071985621) completed actual fakechain payments for digital and physical orders, buyer-only downloads and browser fulfillment. It used temporary infrastructure and did not repeat production Compose isolation or backup restoration. Mainnet payments and independent user testing remain unverified. [Design notes](design/SPEC.md) record the interface research and visual comparison.
 
 JavaScript is required. There is no automatic retention cleanup, account deletion or recovery, arbitration, marketplace commission, multi seller cart, email delivery, automated refunds or custody. Recording a refund records a seller statement and disables downloads; it does not send or independently verify a transfer. Partial payments and ambiguous invoice creation can require operator review. Functional tests are not a security audit or a guarantee of anonymity.
 

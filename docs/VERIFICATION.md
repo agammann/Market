@@ -26,9 +26,26 @@ Stopping the actual BTCPay process made an unpaid order's refresh return 503 whi
 
 Restored order pages had no horizontal overflow at 320, 390 and 1440 pixel widths. The final fulfillment and restoration browser checks recorded no page runtime errors. The fulfillment check recorded four Chromium warnings about the ignored Cross-Origin-Opener-Policy header on the HTTP onion origin and no other console errors. No application code change was needed for this run.
 
-The Monero 0.18.4.3 archive matched the official published SHA256, but Windows refused to launch its wallet RPC executable with a virus or potentially unwanted software error. Security exclusions were not changed. Fresh XMR settlement was therefore **not completed**; the September XMR results below remain historical. This native run also did not repeat Linux volume ownership restoration or recovery on another host.
+The Monero 0.18.4.3 archive matched the official published SHA256, but Windows refused to launch its wallet RPC executable with a virus or potentially unwanted software error. Security exclusions were not changed. Fresh XMR settlement was therefore **not completed in this Windows run**. The separate Linux follow-up below subsequently completed it; the September results remain historical. This native run also did not repeat Linux volume ownership restoration or recovery on another host.
 
 The disposable processes were stopped and their listeners checked absent. Synthetic chain wallets, provider and marketplace databases, credentials, sessions, onion identities and backup archive were removed. No continuing marketplace service was left running.
+
+## October 2, 2026: disposable Linux Monero follow-up
+
+A separate [GitHub Actions run](https://github.com/agammann/Market/actions/runs/37071985621) passed against application commit [`8d22844`](https://github.com/agammann/Market/commit/8d22844f8c5f41caea40b5f857220db742109ef3). The [verification harness at `1e416d8`](https://github.com/agammann/Market/tree/1e416d83dd4ebfe595645b220a8fac609c77d194/.qa/xmr) remains on a separate branch; it is not part of the normal installation or default CI workflow. No application code change was needed for this run.
+
+The disposable Ubuntu 24.04 runner used Node 24.19.0, Chrome 154.0.8037.57 and Playwright 1.63.0. Its payment stack used BTCPay Server 2.4.4, official Monero plugin 1.3.5, Monero daemon and wallet RPC 0.18.4.3, PostgreSQL 18.4 and Tor 0.4.9.13, with Bitcoin Core 31.1 and NBXplorer 2.6.10 supporting the provider. Publisher image digests and the plugin checksum were pinned in the linked harness. The native Node application and Linux containers bound their required listeners to loopback. This arrangement does not reproduce production Compose network isolation.
+
+All nine checks passed. Three fictional accounts registered in the browser through Tor. Real fakechain wallet transfers paid the provider's exact amounts for both a digital order and a physical order:
+
+| Order | Market total | Provider payable amount | Observed result |
+| :--- | :--- | :--- | :--- |
+| Digital | 0.1 XMR | 0.1018 XMR | One payment; BTCPay `Settled`; Market fulfilled. |
+| Physical, including shipping | 0.11 XMR | 0.1118 XMR | One payment; BTCPay `Settled`; Market paid, then fulfilled after receipt. |
+
+The provider payable amounts included its fee. Twelve confirmation blocks were generated after each transfer. Before settlement, the digital download returned 403 and unrelated administrator order access returned 404. After settlement, the seller's download remained denied while the buyer received the exact uploaded bytes with `Cache-Control: no-store`, through both the API and browser. The seller recorded physical shipment, and a buyer at 390-pixel width confirmed receipt and posted a review without horizontal overflow. Physical delivery was fictional.
+
+The run recorded zero browser runtime errors. Monero remained on an isolated fakechain with zero peers, and cleanup confirmed the owned processes, listeners, containers, volumes and generated runtime data were removed. Only the allowlisted report and tool pins were uploaded; wallets, credentials, onion identities and browser sessions were excluded. Earlier registration and missing-listener failures were not diagnosed conclusively; this successful run does not establish their causes. Mainnet payments, production Compose isolation, provider outage recovery and backup restoration were not exercised in this follow-up. The separate Bitcoin and September evidence retains its original scope.
 
 ## September 19, 2026: disposable payment and Tor integration
 
@@ -85,7 +102,7 @@ The restored database passed `PRAGMA integrity_check`. The onion hostname matche
 
 All 13 tests passed after the fixes, and the production frontend and Docker images built successfully. Integration tests use real Express endpoints, SQLite, authentication, uploads, moderation, exact totals, stock, messages, refund recording, reviews and persistence. Private field tests exercise authenticated encryption, context binding, tampering, key persistence, legacy migration and authorized decryption. ETH and USDT are rejected.
 
-Provider fixtures separately cover identity and amount mismatches, interrupted invoice creation, read retries, manual status marking, partial payments, expiry and configuration changes. These failure scenarios were not all repeated against actual chains. GitHub Actions runs installation, tests and the frontend build; it does not run the disposable payment stack or deploy a service.
+Provider fixtures separately cover identity and amount mismatches, interrupted invoice creation, read retries, manual status marking, partial payments, expiry and configuration changes. These failure scenarios were not all repeated against actual chains. The normal `Checks` workflow runs installation, tests and the frontend build; it does not run the disposable payment stack or deploy a service. The separate October verification workflow above runs its temporary stack only on the verification branch.
 
 ### Cleanup and remaining limits
 
