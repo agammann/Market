@@ -1,8 +1,22 @@
 # Verification record
 
-Checked September 19, 2026, Pacific time. Market is a source reference with no hosted demo or continuing service. This record describes an engineering validation using fictional users and products, actual isolated test coins and temporary infrastructure. It is not independent user research or a production certification.
+Market is a source reference with no hosted demo or continuing service. These checks use fictional users and products. They are engineering validation, not independent user research or production certification.
 
-## Environment and procedure
+## October 2, 2026: local application follow-up
+
+A fresh checkout installed with the frozen lockfile on Node 24.19.0 and pnpm 11.19.0. The original 13 tests passed. Three added regressions brought the suite to 16 passing tests; the production frontend build also passed. The new tests use real Express handlers, temporary SQLite databases and generated uploads. They cover unpublished image access and cache policy, separate buyer and seller histories beyond the old 200-order limit, and moderation beyond the old 300-listing and 200-report limits, including last-page adjustment after reports close.
+
+An isolated Edge browser exercised the rebuilt application on loopback, with off-origin requests blocked. Registration, administrator promotion, a digital product upload, image upload, pending listing inspection, approval and public listing viewing passed. Before the fix, both the owner and moderator received a missing image for a pending listing; afterward the actual image loaded for each, while unrelated visitors remained denied in the API checks.
+
+For history and queue checks, a private fixture contained one older purchase, 217 newer sales, more than 300 listings and 201 open reports. The purchase remained visible, all 217 sales were reachable across ten pages without duplicates, and switching tabs reset the page. A deliberately delayed sales response did not replace the purchases view. Listing and report pagination, approval of an older pending submission, and closing the last page of reports also passed. These records were seeded for interface checks; their order statuses do not represent invoices, transfers or provider settlement.
+
+Listing, order and administration screens were checked at 1440, 390 and 320 pixel widths. The document had no horizontal overflow; wide tables retained their contained horizontal scrolling. The final browser checks recorded no page runtime errors or off-origin requests. This follow-up did not start Tor, configure a seller payment connection or repeat blockchain settlement. Those historical results are recorded separately below.
+
+## September 19, 2026: disposable payment and Tor integration
+
+This earlier run used actual isolated test coins and temporary infrastructure. Its versions, results and cleanup apply to that date.
+
+### Environment and procedure
 
 A fresh clone of the public repository installed with the frozen lockfile, passed its original tests and built successfully. The production Compose configuration then ran with a real Tor onion entry point and no app or SOCKS ports published to the host. Fixes found during the exercise were rebuilt and the affected workflows checked again.
 
@@ -24,7 +38,7 @@ Buyer test wallets were funded by mining isolated blocks. A Bitcoin invoice was 
 
 Use [setup](SETUP.md) and the [controlled payment procedure](PAYMENTS.md#controlled-integration-procedure) for your installation. The temporary chain harness and its wallet data are not bundled with Market; `pnpm test` does not reproduce blockchain transfers.
 
-## Observed workflows
+### Observed workflows
 
 | Check | Result and scope |
 | :--- | :--- |
@@ -38,24 +52,24 @@ Use [setup](SETUP.md) and the [controlled payment procedure](PAYMENTS.md#control
 | Browser diagnostics | Zero page runtime errors and zero unexpected console errors in the final fulfillment check. Chromium emitted four warnings that it ignored the Cross-Origin-Opener-Policy header on the HTTP onion origin; no protection was removed to suppress them. |
 | Small API concurrency check | 100 catalog reads, concurrency 10, all HTTP 200; 235 ms total, 32 ms p95, 38 ms maximum on this host. This used the internal Docker network and does not measure Tor capacity or production scale. |
 
-## Backup restoration
+### Backup restoration
 
 The app and its Tor process were stopped together. All three volumes were archived with Linux `tar`; archive listings and SHA256 hashes were recorded privately. Archives were extracted, preserving ownership, into fresh volumes under a separate Compose project on the same Docker host. The original Tor process remained stopped throughout.
 
 The restored database passed `PRAGMA integrity_check`. The onion hostname matched, the application health check passed, and its restored onion entry point returned HTTP 200 through Tor. Existing sessions and fulfilled orders remained usable; the restored key decrypted private messages, shipping details and tracking. The protected digital file matched its original contents. Recovery on another physical host or after total host loss was not exercised.
 
-## Fixes demonstrated by the run
+### Fixes demonstrated by the run
 
 1. The documented `docker compose cp` seller import failed against the production container's read only root filesystem. The operator CLI now accepts JSON from standard input with `-`; the revised PowerShell import was verified inside that container. Malformed JSON errors omit input contents so credentials cannot appear in parser diagnostics. A regression test covers successful import, rejected asset changes, unchanged existing configuration after failure and secret suppression.
 2. Listing and order screens incorrectly assumed the provider used mainnet. They now direct the buyer to confirm the network on the seller's invoice. This guidance was verified in the rebuilt browser interface; Market does not independently certify a provider's chain configuration.
 
-## Automated checks
+### Automated checks
 
 All 13 tests passed after the fixes, and the production frontend and Docker images built successfully. Integration tests use real Express endpoints, SQLite, authentication, uploads, moderation, exact totals, stock, messages, refund recording, reviews and persistence. Private field tests exercise authenticated encryption, context binding, tampering, key persistence, legacy migration and authorized decryption. ETH and USDT are rejected.
 
 Provider fixtures separately cover identity and amount mismatches, interrupted invoice creation, read retries, manual status marking, partial payments, expiry and configuration changes. These failure scenarios were not all repeated against actual chains. GitHub Actions runs installation, tests and the frontend build; it does not run the disposable payment stack or deploy a service.
 
-## Cleanup and remaining limits
+### Cleanup and remaining limits
 
 The temporary marketplace, restored marketplace and payment stack were removed, including their containers, dedicated networks, volumes, onion identities, wallet data, local credential files and backup archives. No operator onion address, key, session cookie or customer data is included in the repository. Development screenshots contain only fictional test content or the earlier empty catalog.
 

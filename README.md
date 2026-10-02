@@ -75,7 +75,9 @@ For an instance you choose to run, register a pseudonymous account through its w
 docker compose exec -T app node scripts/admin.mjs promote YOUR_USERNAME
 ```
 
-Reload to see Admin. Sellers use Sell to create listings; administrators approve new or edited listings. Digital listings require a file. Physical listings require shipping regions and a flat shipping charge in the listing currency. Connect a separate BTCPay instance before taking orders. There is no default administrator or password recovery flow.
+Reload to see Admin. Sellers use Sell to create listings; administrators approve new or edited listings. Pending submissions appear first in the review list, and their photos are visible to their seller and administrators before publication. Digital listings require a file. Physical listings require shipping regions and a flat shipping charge in the listing currency. Connect a separate BTCPay instance before taking orders. There is no default administrator or password recovery flow.
+
+Orders separates purchases from sales and provides pages for each history. Admin provides separate pages for listings and open reports, so older records remain accessible as the marketplace grows.
 
 ## Privacy boundaries
 
@@ -85,7 +87,7 @@ The running server can decrypt private fields. This protects a database copy wit
 
 ## Verification and limits
 
-[Verification notes](docs/VERIFICATION.md) document automated checks, actual test coin settlement, browser workflows over Tor, outage recovery and a backup restoration drill. Mainnet payments and independent user testing remain unverified. [Design notes](design/SPEC.md) record the interface research and visual comparison.
+[Verification notes](docs/VERIFICATION.md) separate the October 2 local browser and automated checks from the September 19 test coin settlement, browser workflows over Tor, outage recovery and backup restoration drill. Mainnet payments and independent user testing remain unverified. [Design notes](design/SPEC.md) record the interface research and visual comparison.
 
 JavaScript is required. There is no automatic retention cleanup, account deletion or recovery, arbitration, marketplace commission, multi seller cart, email delivery, automated refunds or custody. Recording a refund records a seller statement and disables downloads; it does not send or independently verify a transfer. Partial payments and ambiguous invoice creation can require operator review. Functional tests are not a security audit or a guarantee of anonymity.
 

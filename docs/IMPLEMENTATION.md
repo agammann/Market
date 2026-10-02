@@ -19,7 +19,9 @@ This map connects behavior to source. It describes the reference implementation,
 
 ## Request and data flow
 
-The React UI calls same origin API routes. Sessions identify a pseudonymous account; server checks enforce role and ownership for each action. Public media routes only expose images attached to active listings. Product files stay outside public static assets and pass through authenticated order download checks.
+The React UI calls same origin API routes. Sessions identify a pseudonymous account; server checks enforce role and ownership for each action. Visitors can load images attached to active listings. A listing's seller and administrators can also load its unpublished images using their session; these responses use `Cache-Control: no-store`. Product files stay outside public static assets and pass through authenticated order download checks.
+
+Order history filters by the current account's role before pagination. `GET /api/orders?view=buying&page=0` returns `{ items, total, page, pageSize }`; `view=selling` selects sales. `GET /api/admin?listingPage=0&reportPage=0` returns listings and open reports with separate `listingPagination` and `reportPagination` objects. Pages are zero based, contain up to 24 records and clamp to the last available page. Pending listings appear first, followed by other listings; within each group the newest update appears first. Order and report histories use newest creation time first, with record IDs breaking ties. The interface ignores stale responses after a tab or page change.
 
 Listing creation and edits go to moderation. Order creation snapshots the product and amount while reserving stock in a database transaction. Monetary calculations use integer atomic units rather than floating point arithmetic. The payment adapter sends an order UUID, currency, amount and checkout options to the configured seller instance through a proxy with remote DNS resolution. It excludes product names, delivery data and private conversations.
 
