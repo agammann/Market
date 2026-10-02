@@ -1,0 +1,144 @@
+{
+  "library/node:24.19.0-bookworm-slim": {
+    "digest": "sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
+    "linuxAmd64": "sha256:e5a8dee7bc1e6a215d224a7ef8206f7e77271bc3cabd5febf2beafac0674f174",
+    "config": {
+      "Entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "Cmd": [
+        "node"
+      ],
+      "User": null,
+      "WorkingDir": null,
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "NODE_VERSION=24.19.0",
+        "YARN_VERSION=1.22.22"
+      ]
+    }
+  },
+  "library/postgres:18.4": {
+    "digest": "sha256:a02db8cac496f15b094798a38254f14d6e00741f709360e5e00bb6668ea31636",
+    "linuxAmd64": "sha256:4cc13dede823cab4e05290c7fb3350fb4e599ecabd9b07e6706b5d5e8f5bc929",
+    "config": {
+      "Entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "Cmd": [
+        "postgres"
+      ],
+      "User": null,
+      "WorkingDir": null,
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/18/bin",
+        "GOSU_VERSION=1.19",
+        "LANG=en_US.utf8",
+        "PG_MAJOR=18",
+        "PG_VERSION=18.4-1.pgdg13+1",
+        "PGDATA=/var/lib/postgresql/18/docker"
+      ]
+    }
+  },
+  "btcpayserver/bitcoin:31.1-1": {
+    "digest": "sha256:b7fe7d0c6a0db6114d29921644bd1be8fc0efbc4abef04b1caf2242cc416c31d",
+    "linuxAmd64": "sha256:3413fd57c480f1e6edc4b7005d817d1e66c484e2a2c6ca62c4422b48be2622e9",
+    "config": {
+      "Entrypoint": [
+        "/entrypoint.sh"
+      ],
+      "Cmd": [
+        "bitcoind"
+      ],
+      "User": null,
+      "WorkingDir": null,
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "BITCOIN_DATA=/data"
+      ]
+    }
+  },
+  "nicolasdorier/nbxplorer:2.6.10": {
+    "digest": "sha256:7d2ab1f6ce38e301cba98a4f85bfbfcf2912d5034bd88af056f9d60e5511f911",
+    "linuxAmd64": "sha256:6f854fb8f8317cd464b3e1fa45d107992a8a6b8d831a9a69600000e5eb1c193b",
+    "config": {
+      "Entrypoint": [
+        "dotnet",
+        "NBXplorer.dll"
+      ],
+      "Cmd": null,
+      "User": null,
+      "WorkingDir": "/app",
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "APP_UID=1654",
+        "ASPNETCORE_HTTP_PORTS=8080",
+        "DOTNET_RUNNING_IN_CONTAINER=true",
+        "DOTNET_VERSION=10.0.10",
+        "ASPNET_VERSION=10.0.10",
+        "NBXPLORER_DATADIR=/datadir"
+      ]
+    }
+  },
+  "btcpayserver/btcpayserver:2.4.4": {
+    "digest": "sha256:c264aa08cd32a469bd30d41978b73dc8bb2de1503ce67bdb0ab8fd5d934fb614",
+    "linuxAmd64": "sha256:0eee024338f457421be951747ba6945000355f49c89af67ecef7bc2013d4f4f0",
+    "config": {
+      "Entrypoint": [
+        "/app/docker-entrypoint.sh"
+      ],
+      "Cmd": null,
+      "User": null,
+      "WorkingDir": "/app",
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "APP_UID=1654",
+        "ASPNETCORE_HTTP_PORTS=8080",
+        "DOTNET_RUNNING_IN_CONTAINER=true",
+        "DOTNET_VERSION=10.0.11",
+        "ASPNET_VERSION=10.0.11",
+        "LC_ALL=en_US.UTF-8",
+        "LANG=en_US.UTF-8",
+        "BTCPAY_DATADIR=/datadir",
+        "DOTNET_CLI_TELEMETRY_OPTOUT=1"
+      ]
+    }
+  },
+  "btcpayserver/monero:0.18.4.3": {
+    "digest": "sha256:210af42cff4311e7fc6040116363ea3dc0d0d3d64c938969679a5a00fc752936",
+    "linuxAmd64": "sha256:3f8925d3f8fb81c37b2537a3099e40c29653b80b88a5ab45f8c6dfa2f9997740",
+    "config": {
+      "Entrypoint": [
+        "/entrypoint.sh"
+      ],
+      "Cmd": null,
+      "User": null,
+      "WorkingDir": null,
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "MONERO_DATA=/data",
+        "MONERO_WALLET=/wallet"
+      ]
+    }
+  },
+  "btcpayserver/tor:0.4.9.13": {
+    "digest": "sha256:41d43f0a35b997aa60191823d80dd434f86b3799e15d1e77246ae1f77c42d9cc",
+    "linuxAmd64": "sha256:410de79d8909f836bcb3b2a9d2d231b5a44e49d3a23c276aa16d46ed8b625ffe",
+    "config": {
+      "Entrypoint": [
+        "./entrypoint.sh"
+      ],
+      "Cmd": [
+        "tor"
+      ],
+      "User": null,
+      "WorkingDir": null,
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "TOR_VERSION=0.4.9.13",
+        "TOR_DATA=/home/tor/.tor",
+        "TOR_CONFIG=/usr/local/etc/tor/torrc"
+      ]
+    }
+  }
+}
