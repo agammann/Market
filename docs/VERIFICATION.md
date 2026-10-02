@@ -12,6 +12,24 @@ For history and queue checks, a private fixture contained one older purchase, 21
 
 Listing, order and administration screens were checked at 1440, 390 and 320 pixel widths. The document had no horizontal overflow; wide tables retained their contained horizontal scrolling. The final browser checks recorded no page runtime errors or off-origin requests. This follow-up did not start Tor, configure a seller payment connection or repeat blockchain settlement. Those historical results are recorded separately below.
 
+## October 2, 2026: native Bitcoin and Tor follow-up
+
+The application at commit `8d5840d` was then exercised with a fresh native Windows payment stack. This run used Bitcoin Core 31.1 in regtest, BTCPay Server 2.4.4 and NBXplorer 2.6.10 built from their tagged source with the .NET 10.0.401 SDK, PostgreSQL 18.4 and Tor 0.4.9.13. It used no Docker containers or public-network funds. Core's observed peers were all loopback connections. Application and provider processes listened on loopback, with separate fresh onion identities for browser access and seller payment requests. This does not reproduce the production Compose network isolation.
+
+A new provider account, store, test wallet and store-scoped invoice creation/viewing key were configured. Actual Edge browser checks through Tor covered account registration, a digital file and image upload, unpublished image visibility for its owner and moderator, guest denial, listing approval and buyer checkout. The BTCPay invoice page also loaded through the provider onion.
+
+Two real regtest wallet transfers paid a 0.001 BTC digital order and a 0.0021 BTC physical order, including its 0.0001 BTC shipping charge. Six blocks were mined after each transfer. BTCPay reported both invoices as `Settled`, with one payment each; Market fulfilled the digital order and marked the physical order paid. The seller recorded shipment in the browser, and the mobile buyer confirmed receipt and posted a review. Physical delivery was fictional.
+
+The unpaid download returned 403, an unrelated administrator could not read the order, and the seller could not download the buyer's purchase. After settlement, the buyer received the exact uploaded file with `Cache-Control: no-store`, including through the browser. Three concurrent requests with one request key created one additional order. Database inspection confirmed that the five-item listing had exactly two ordered items and three remaining in stock.
+
+Stopping the actual BTCPay process made an unpaid order's refresh return 503 while preserving its status, stock reservation and download restriction. After restart, the original invoice refreshed successfully. The marketplace and its Tor process were then stopped, their application data and onion state archived, and the archive extracted into a fresh directory on the same Windows host. The original instance remained stopped. The restored database passed `PRAGMA integrity_check`, the onion hostname matched, and the restored service accepted existing buyer sessions. Private messages, delivery details and tracking decrypted correctly, reviews remained visible, and the protected download matched the original file through the restored onion.
+
+Restored order pages had no horizontal overflow at 320, 390 and 1440 pixel widths. The final fulfillment and restoration browser checks recorded no page runtime errors. The fulfillment check recorded four Chromium warnings about the ignored Cross-Origin-Opener-Policy header on the HTTP onion origin and no other console errors. No application code change was needed for this run.
+
+The Monero 0.18.4.3 archive matched the official published SHA256, but Windows refused to launch its wallet RPC executable with a virus or potentially unwanted software error. Security exclusions were not changed. Fresh XMR settlement was therefore **not completed**; the September XMR results below remain historical. This native run also did not repeat Linux volume ownership restoration or recovery on another host.
+
+The disposable processes were stopped and their listeners checked absent. Synthetic chain wallets, provider and marketplace databases, credentials, sessions, onion identities and backup archive were removed. No continuing marketplace service was left running.
+
 ## September 19, 2026: disposable payment and Tor integration
 
 This earlier run used actual isolated test coins and temporary infrastructure. Its versions, results and cleanup apply to that date.
