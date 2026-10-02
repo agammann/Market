@@ -10,7 +10,7 @@ export COMPOSE_PROJECT_NAME="marketxmr${GITHUB_RUN_ID}a${GITHUB_RUN_ATTEMPT}"
 mkdir -p "$qa/evidence"
 printf '{"result":"not_started","stage":"preflight"}\n' > "$QA_REPORT"
 [[ $(git -C "$app" rev-parse HEAD) == 8d22844f8c5f41caea40b5f857220db742109ef3 ]]
-node --test "$qa/health.test.mjs"
+node --test "$qa/health.test.mjs" "$qa/registration-diagnostics.test.mjs"
 [[ $(df --output=avail -B1 "$RUNNER_TEMP" | tail -1) -ge 15000000000 ]]
 [[ ! -e "$QA_RUNTIME" ]]
 existing_containers=$(docker ps -aq --filter "label=com.docker.compose.project=$COMPOSE_PROJECT_NAME")

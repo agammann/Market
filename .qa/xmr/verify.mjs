@@ -6,6 +6,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {pathToFileURL} from 'node:url';
 import {chromium} from 'playwright';
 import {marketHealth} from './health.mjs';
+import {registrationFact, registrationPage} from './registration-diagnostics.mjs';
 
 assert.equal(process.env.GITHUB_ACTIONS, 'true');
 assert.equal(process.env.RUNNER_OS, 'Linux');
@@ -20,6 +21,7 @@ const report = {source: '8d22844f8c5f41caea40b5f857220db742109ef3', result: 'run
     'Physical delivery is fictional.']};
 let stage = 'readiness';
 let market, browser, providerBrowser;
+let registrationSnapshot, registrationCleanup;
 const save = () => fs.writeFileSync(reportPath, JSON.stringify({...report, stage}, null, 2));
 const pass = name => {report.checks.push(name); save();};
 save();
@@ -160,23 +162,71 @@ try {
     proxy: {server: 'socks5://127.0.0.1:43889'}});
   const users = {};
   let runtimeErrors = 0;
+  report.browserRuntimeErrors = 0;
   for (const role of ['seller', 'buyer', 'admin']) {
     const context = await browser.newContext({viewport: {width: 1440, height: 1000}});
     const page = await context.newPage();
     page.setDefaultTimeout(90000);
-    page.on('pageerror', () => runtimeErrors++);
+    const started = Date.now();
+    const diagnostic = {role, events: []};
+    (report.registration ??= []).push(diagnostic);
+    const record = fact => {
+      if (!fact || diagnostic.events.length >= 40) return;
+      diagnostic.events.push({...fact, elapsedMs: Date.now() - started}); save();
+    };
+    const request = r => record(registrationFact(origin, 'request', r.url()));
+    const finished = r => record(registrationFact(origin, 'finished', r.url()));
+    const failed = r => record(registrationFact(origin, 'failed', r.url()));
+    const observeResponse = async r => {
+      const fact = registrationFact(origin, 'response', r.url(), {status: r.status()});
+      if (!fact) return;
+      record(fact);
+      try {record(registrationFact(origin, 'body', r.url(), {readable: true, body: await r.json()}));}
+      catch {record(registrationFact(origin, 'body', r.url()));}
+    };
+    const navigation = frame => {
+      if (frame === page.mainFrame()) record({event: 'navigation', path: registrationPage(origin, frame.url())});
+    };
+    page.on('request', request); page.on('requestfinished', finished);
+    page.on('requestfailed', failed); page.on('response', observeResponse); page.on('framenavigated', navigation);
+    page.on('pageerror', () => {runtimeErrors++; report.browserRuntimeErrors = runtimeErrors; save();});
+    registrationCleanup = () => {
+      page.off('request', request); page.off('requestfinished', finished);
+      page.off('requestfailed', failed); page.off('response', observeResponse); page.off('framenavigated', navigation);
+    };
+    registrationSnapshot = async () => {
+      diagnostic.page = registrationPage(origin, page.url());
+      const headings = ['Welcome back', 'Create your account', 'Your account', 'Seller profile'];
+      diagnostic.headings = Object.fromEntries(await Promise.all(headings.map(async name =>
+        [name, await page.getByRole('heading', {name, exact: true}).isVisible()])));
+      diagnostic.signOutVisible = await page.getByRole('button', {name: 'Sign out', exact: true}).isVisible();
+      diagnostic.errorBoundaryVisible = await page.getByText('Something went wrong displaying this page. Reload to try again.', {exact: true}).isVisible();
+      diagnostic.alertCount = await page.getByRole('alert').count();
+      const cookie = (await context.cookies(origin)).find(c => c.name === 'market_session');
+      diagnostic.sessionCookiePresent = Boolean(cookie);
+      if (cookie) diagnostic.sessionCookie = {secure: cookie.secure, httpOnly: cookie.httpOnly,
+        sameSite: ['Strict', 'Lax', 'None'].includes(cookie.sameSite) ? cookie.sameSite : 'other'};
+      save();
+    };
+    stage = 'market_registration_' + role + '_form'; save();
     // Navigation can wait for Tor descriptor publication; registration itself is never retried.
     await bounded(async () => {await page.goto(origin + '/login', {timeout: 30000}); return await page.getByRole('button', {name: 'New here? Create an account', exact: true}).isVisible();}, 180);
     await page.getByRole('button', {name: 'New here? Create an account', exact: true}).click();
     await page.getByLabel('Username', {exact: true}).fill('trial_' + role);
     await page.locator('input[name="password"]').fill(credentials.marketPassword);
+    stage = 'market_registration_' + role + '_submit'; save();
     const pending = page.waitForResponse(r => r.url().endsWith('/api/register') && r.request().method() === 'POST');
     await page.getByRole('button', {name: 'Create account', exact: true}).click();
     const response = await pending;
     assert.equal(response.status(), 200);
     const data = await response.json();
     users[role] = {context, page, csrf: data.csrf};
+    diagnostic.registration = {status: response.status(), authenticated: Boolean(data.user),
+      csrfPresent: typeof data.csrf === 'string' && data.csrf.length > 0};
+    stage = 'market_registration_' + role + '_account'; save();
     await page.getByRole('heading', {name: 'Seller profile'}).waitFor();
+    await registrationSnapshot();
+    registrationCleanup(); registrationCleanup = registrationSnapshot = null;
   }
   pass('three_real_browser_accounts_through_tor');
   await stopMarket();
@@ -315,6 +365,11 @@ try {
   pass('no_browser_runtime_errors_and_fakechain_still_isolated');
   report.result = 'passed'; stage = 'complete'; save();
 } catch (error) {
+  if (registrationSnapshot) {
+    try {await Promise.race([registrationSnapshot(), delay(5000).then(() => {throw Error('Diagnostic deadline');})]);}
+    catch {report.registrationSnapshotIncomplete = true;}
+    registrationCleanup?.();
+  }
   report.result = 'failed';
   report.failureType = error.name;
   report.failureSummary = String(error.message).split('\n')[0]
