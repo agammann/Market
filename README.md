@@ -87,7 +87,7 @@ The running server can decrypt private fields. This protects a database copy wit
 
 ## Verification and limits
 
-[Verification notes](docs/VERIFICATION.md) separate the October 2 local browser and automated checks from the September 19 test coin settlement, browser workflows over Tor, outage recovery and backup restoration drill. Mainnet payments and independent user testing remain unverified. [Design notes](design/SPEC.md) record the interface research and visual comparison.
+[Verification notes](docs/VERIFICATION.md) separate the October 2 local checks and native Bitcoin regtest follow-up from the September 19 Bitcoin and Monero integration. The fresh Bitcoin run exercised purchases through Tor, provider outage recovery and same-host backup restoration. Fresh Monero settlement remains blocked by the Windows wallet RPC environment; mainnet payments and independent user testing remain unverified. [Design notes](design/SPEC.md) record the interface research and visual comparison.
 
 JavaScript is required. There is no automatic retention cleanup, account deletion or recovery, arbitration, marketplace commission, multi seller cart, email delivery, automated refunds or custody. Recording a refund records a seller statement and disables downloads; it does not send or independently verify a transfer. Partial payments and ambiguous invoice creation can require operator review. Functional tests are not a security audit or a guarantee of anonymity.
 
