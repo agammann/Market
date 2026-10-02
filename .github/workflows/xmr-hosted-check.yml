@@ -1,0 +1,47 @@
+name: Isolated XMR integration
+
+on:
+  push:
+    branches: [verification/xmr-fakechain-20261002]
+    paths: ['.qa/xmr/**', '.github/workflows/xmr-hosted-check.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: market-xmr-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out verification harness
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: verification
+          persist-credentials: false
+      - name: Check out exact application revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 8d22844f8c5f41caea40b5f857220db742109ef3
+          path: app
+          persist-credentials: false
+      - name: Select Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.19.0
+      - name: Run disposable fakechain purchase verification
+        run: timeout --signal=TERM --kill-after=30s 55m bash verification/.qa/xmr/run.sh
+      - name: Retain allowlisted results only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: xmr-verification-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            verification/.qa/xmr/evidence/report.json
+            verification/.qa/xmr/evidence/pins.json
