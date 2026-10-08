@@ -43,6 +43,8 @@ The adapter checks invoice identity, store, order reference, currency and exact 
 
 The seller's provider determines the blockchain network and may add payment method fees. Follow the exact payable amount, destination, network and deadline on its invoice; the order total alone may not cover those fees. Market does not independently discover or certify the provider's network. For example, the isolated XMR check used a 0.11 XMR order with a provider payable amount of 0.1118 XMR.
 
+After a partial payment, reopen the provider invoice and wait for its payment details to update before considering a remainder. A provider can add fees for each transaction, so an earlier remaining amount may already be out of date. Market keeps the purchase locked until the provider reports settlement; repeating a refresh does not mark an underpaid invoice paid.
+
 Polling examines up to ten pending orders per cycle, once per minute, with bounded timeouts. High volume and outages delay updates. Participants can request a refresh. Partial or late payments remain under review. Inventory is released only after provider expiry, end of monitoring, and explicit evidence of zero payments across methods.
 
 A durable flag is set immediately before invoice creation. After a lost POST response the app searches by order reference rather than creating another invoice. If no invoice is found, the order stays pending for operator investigation. There is no blind retry of ambiguous creation or unsafe manual release button.

@@ -1,15 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import request from "supertest";
-import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createApp } from "../server/app.mjs";
 
 test("Persistent marketplace: authorization, exact totals, inventory, invoices and protected fulfillment", async () => {
-  const root = path.resolve("../../work/market-tests");
-  mkdirSync(root, { recursive: true });
-  const dir = mkdtempSync(path.join(root, "case-"));
+  const root = path.resolve(tmpdir());
+  const dir = mkdtempSync(path.join(root, "market-orders-"));
   const invoiceStates = new Map();
   const configured = new Set();
   let created = 0;

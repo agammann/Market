@@ -256,6 +256,8 @@ export function OrderDetail() {
                 Follow the exact amount and expiry shown on the BTCPay invoice.
                 Network fees may apply. A payment must reach the required
                 confirmations before fulfillment.
+                After a partial payment, reopen the invoice to check its updated
+                remaining amount and fees before sending a remainder.
               </p>
             </>
           )}

@@ -27,7 +27,9 @@ The application does not hold wallet keys, pool customer balances or provide esc
 
 ## Explore and test locally
 
-Requires Node 24.14 or newer and pnpm 11.19.0.
+The v1 source release is available under [Releases](https://github.com/agammann/Market/releases). Extract `Market-1.0.0-source.zip`, verify its SHA256 against `SHA256SUMS`, and open a terminal in the extracted `Market-1.0.0` folder. `RELEASE.json` records the source commit, tree and file hashes. The ZIP includes source and documentation; Docker or the commands below build the application for your machine.
+
+Local development requires Node 24.19.0 and pnpm 11.25.0. Docker users do not need these installed on the host. Node 25 and other runtimes are outside the tested v1 contract.
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -91,4 +93,4 @@ The running server can decrypt private fields. This protects a database copy wit
 
 JavaScript is required. There is no automatic retention cleanup, account deletion or recovery, arbitration, marketplace commission, multi seller cart, email delivery, automated refunds or custody. Recording a refund records a seller statement and disables downloads; it does not send or independently verify a transfer. Partial payments and ambiguous invoice creation can require operator review. Functional tests are not a security audit or a guarantee of anonymity.
 
-Public source visibility does not grant an open source license. No application license is supplied; dependencies retain their respective licenses.
+Market is available under the [MIT license](LICENSE). You can use, modify and build on the application; dependencies retain their respective licenses. For a reproducible source release, see [developer instructions](docs/IMPLEMENTATION.md#v1-source-release).
