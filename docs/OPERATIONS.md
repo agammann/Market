@@ -44,6 +44,8 @@ Inspect `docker compose ps` and privately review bounded logs. Monitor host disk
 
 Before upgrading, record `git rev-parse HEAD` and the installed image IDs with `docker compose images`, review upstream changes and create a consistent backup. Stop the running services before backing up. With services stopped, a routine update is:
 
+If you installed the source ZIP, use its `RELEASE.json` in place of `git rev-parse HEAD`. Download and verify the next version in a fresh directory, review its changes and keep the previous source and stopped backup. Run Compose from the new directory with the same `onion-market` project name so it mounts the existing volumes. Do not copy an empty data directory over an installation or delete volumes to update it. For a Git checkout, the commands below obtain and build the new source.
+
 ```powershell
 git pull --ff-only
 docker compose build --pull

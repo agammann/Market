@@ -3,6 +3,8 @@ dist
 data
 .env*
 .git
+dist-release
+__pycache__
 design
 tests
 *.log

@@ -1,14 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, rmSync, unlinkSync } from "node:fs";
+import { mkdtempSync, rmSync, unlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { openDatabase } from "../server/db.mjs";
 import { privateFields } from "../server/privacy.mjs";
 
 test("Private field encryption authenticates data and binds ciphertext to its order and field", () => {
-  const root = path.resolve("../../work/privacy-tests");
-  mkdirSync(root, { recursive: true });
-  const dir = mkdtempSync(path.join(root, "case-"));
+  const root = path.resolve(tmpdir());
+  const dir = mkdtempSync(path.join(root, "market-privacy-"));
   const db = openDatabase(dir);
   try {
     const fields = privateFields(dir, db);

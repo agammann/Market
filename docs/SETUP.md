@@ -4,13 +4,15 @@ Market is a reference application. There is no hosted demo, included operator ad
 
 ## 1. Obtain and check the source
 
-Install Git and Node.js 24.14 or newer. Use the pinned pnpm version used by the Dockerfile and CI:
+For a stable v1, download `Market-1.0.0-source.zip` and `SHA256SUMS` from [Releases](https://github.com/agammann/Market/releases). In PowerShell, run `Get-FileHash .\Market-1.0.0-source.zip -Algorithm SHA256` and compare it with the ZIP's line in `SHA256SUMS`. Extract the archive into a new folder and open a terminal in `Market-1.0.0`. The included `RELEASE.json` identifies the exact source and files. The archive includes no accounts, wallets, payment keys or built dependencies.
+
+Alternatively, clone the repository for development with the commands below. Local development uses Node.js 24.19.0; v1 tests use Node 24, while newer major versions are not supported yet. Use the pinned pnpm version used by the Dockerfile and CI:
 
 ```powershell
 git clone https://github.com/agammann/Market.git
 cd Market
 node --version
-npm install --global pnpm@11.19.0
+npm install --global pnpm@11.25.0
 pnpm --version
 pnpm install --frozen-lockfile
 pnpm test

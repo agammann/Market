@@ -12,3 +12,5 @@ hostname
 onion-address*
 backups/
 work/
+dist-release/
+__pycache__/

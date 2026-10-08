@@ -56,3 +56,23 @@ pnpm build
 The GitHub Actions workflow runs these same checks on pushes to `main` and pull requests. It never launches a hosted instance. Read test names and assertions in `tests/` to distinguish application behavior from simulated payment provider responses. No test success implies a connected live wallet.
 
 For a change, preserve existing tests that exercise meaningful behavior, add coverage for changed failure or permission boundaries, run the checks, review the diff and update the relevant guide. Keep runtime data, addresses, API keys, backups and logs outside Git. Ignore rules are a guard against accidental addition, not a substitute for inspecting staged files and history.
+
+## V1 source release
+
+The supported delivery is source: a Node 24.19.0 application and an optional Docker Linux Tor deployment. Install pnpm 11.25.0 for local builds. Python 3.12 or newer and Git are needed only to build and check release archives. The Dockerfiles pin their base images; Tor packages are installed from Debian's repository at build time, so an image rebuild can incorporate package updates. Record image IDs when operating and restoring an installation.
+
+After committing reviewed changes and passing the checks, build a new release directory:
+
+```powershell
+python scripts/build-release.py
+python scripts/check-release.py dist-release --source .
+python scripts/verify-source-consumer.py dist-release
+```
+
+The builder requires a clean Git working tree and a fresh destination. It archives exactly the committed files with a source commit, tree, per-file hashes and modes; operator data, dependencies and built frontend output are excluded. The checker rejects duplicate paths, changed files, extra payloads and version mismatches. The consumer check installs the archive in a fresh temporary directory, runs the complete tests and builds the frontend. It requires the tested Node and pnpm versions.
+
+Pull requests run installation, tests, build, dependency audit, source packaging and fresh source consumers on Windows and Linux; a separate Linux job builds the production Docker images. CI creates no continuing hosted service and performs no chain transfers. The disposable regtest/fakechain procedure in [payment setup](PAYMENTS.md#controlled-integration-procedure) remains a separate integration check.
+
+On a reviewed merge to `main`, the publisher checks the exact checkout and packaged file bytes, verifies main has not advanced, creates an immutable version tag, uploads a draft release, checks all five asset digests, and publishes only that complete draft. It refuses an existing tag or release. Bump `package.json` for a new release; never replace a published version's files. If a draft upload fails, investigate it rather than overwriting the existing tag or assets.
+
+Developers can change the ordinary React components in `src/`, Express handlers in `server/app.mjs`, invoice adapter in `server/payments.mjs`, and operator commands in `scripts/admin.mjs`. Preserve exact atomic-unit arithmetic, participant checks, stock reservation and the durable invoice-attempt boundary when changing payment code. Keep operational addresses and keys out of commits and release artifacts.
