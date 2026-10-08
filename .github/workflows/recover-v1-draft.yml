@@ -1,0 +1,76 @@
+name: Recover unpublished Market v1 draft
+on:
+  push:
+    branches: [recovery/market-v1-draft-406613709]
+permissions:
+  contents: write
+concurrency:
+  group: market-unpublished-draft-406613709
+  cancel-in-progress: false
+jobs:
+  remove-known-unpublished-draft:
+    if: github.repository == 'agammann/Market' && github.event_name == 'push' && github.ref == 'refs/heads/recovery/market-v1-draft-406613709'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+      - name: Verify and remove only the known unpublished draft and its old tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {execFileSync, spawnSync} from 'node:child_process';
+          const repo='agammann/Market';
+          const main='96dd33651781651fb65ff5b6fcd9ae4516e7013f';
+          const tree='bc7ca84fc8d5a97caeb2460ed2a6c04623146f44';
+          const tag='v1.0.0', releaseId=406613709;
+          const expectedAssets=[{"id":621259734,"name":"release.json","size":9688,"digest":"sha256:423a7034cc08209ff99241a05cee909130b2e1fe221ce378f5aa9bb6651ce9eb"},{"id":621259736,"name":"release.json.sha256","size":79,"digest":"sha256:b7d71b92e2427cfbcdef5647ae71e4829d4a052f72792af5c504a4ae372213cb"},{"id":621259737,"name":"Market-1.0.0-source.zip","size":1516982,"digest":"sha256:5e1b70dbfb6cfc736f211fd8bfbbea64bb2d608cc5fc665e1bc744fd4c524745"},{"id":621259742,"name":"SHA256SUMS","size":169,"digest":"sha256:deaa686e0f939cc06f22382884b68e562c0d2496bfaebd4ce58215657faa283c"},{"id":621259750,"name":"Market-1.0.0-source.zip.sha256","size":90,"digest":"sha256:589c8afd7b97b3a8193b123f437565ea3496adf62181bef6b5a5aa4ca69f6bb6"}];
+          assert.equal(process.version,'v24.19.0');
+          assert.equal(process.env.GITHUB_ACTIONS,'true');
+          assert.equal(process.env.GITHUB_REPOSITORY,repo);
+          assert.equal(process.env.GITHUB_EVENT_NAME,'push');
+          assert.equal(process.env.GITHUB_REF,'refs/heads/recovery/market-v1-draft-406613709');
+          assert.match(process.env.GITHUB_SHA||'',/^[a-f0-9]{40}$/);
+          const gh=args=>execFileSync('gh',args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:60000});
+          const api=route=>JSON.parse(gh(['api','repos/'+repo+'/'+route]));
+          const sameMain=()=>{
+            const ref=api('git/ref/heads/main');assert.equal(ref.ref,'refs/heads/main');
+            assert.equal(ref.object.type,'commit');assert.equal(ref.object.sha,main);
+            assert.equal(api('git/commits/'+main).tree.sha,tree);
+          };
+          const sameTag=()=>{
+            const ref=api('git/ref/tags/'+tag);assert.equal(ref.ref,'refs/tags/'+tag);
+            assert.equal(ref.object.type,'commit');assert.equal(ref.object.sha,main);
+          };
+          const sameDraft=()=>{
+            const matches=api('releases?per_page=100').filter(r=>r.tag_name===tag);
+            assert.equal(matches.length,1);assert.equal(matches[0].id,releaseId);
+            const release=api('releases/'+releaseId);
+            assert.equal(release.id,releaseId);assert.equal(release.tag_name,tag);
+            assert.equal(release.target_commitish,main);assert.equal(release.draft,true);
+            assert.equal(release.prerelease,false);
+            const actual=release.assets.map(a=>({id:a.id,name:a.name,size:a.size,digest:a.digest})).sort((a,b)=>a.id-b.id);
+            assert.deepEqual(actual,expectedAssets);
+          };
+          const deletedDraft=()=>{
+            const result=spawnSync('gh',['api','repos/'+repo+'/releases/'+releaseId],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:60000});
+            assert.equal(result.error,undefined);assert.notEqual(result.status,0);
+            assert.equal(Number(JSON.parse(result.stdout).status),404,'Known draft still exists or readback failed');
+            assert.equal(api('releases?per_page=100').filter(r=>r.tag_name===tag).length,0,'A release now uses this tag');
+          };
+          sameMain();
+          const recovery=api('git/commits/'+process.env.GITHUB_SHA);
+          assert.deepEqual(recovery.parents.map(p=>p.sha),[main],'Recovery branch must start at the exact unchanged main');
+          sameTag();sameDraft();
+          sameMain();sameTag();sameDraft();
+          gh(['api','repos/'+repo+'/releases/'+releaseId,'--method','DELETE']);
+          deletedDraft();sameMain();sameTag();
+          deletedDraft();sameMain();sameTag();
+          gh(['api','repos/'+repo+'/git/refs/tags/'+tag,'--method','DELETE']);
+          sameMain();deletedDraft();
+          assert.equal(api('git/matching-refs/tags/'+tag).filter(r=>r.ref==='refs/tags/'+tag).length,0);
+          console.log(JSON.stringify({result:'passed',removedOnlyUnpublishedDraft:releaseId,removedOnlyOldTag:tag,expectedMain:main,expectedTree:tree,verifiedAssets:expectedAssets,mainPreserved:true}));
+          NODE
