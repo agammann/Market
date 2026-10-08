@@ -24,11 +24,13 @@ assert.equal(api('git/ref/heads/main').object.sha,sha);
 gh(['api','repos/'+repo+'/git/refs','--method','POST','--field','ref=refs/tags/'+tag,'--field','sha='+sha]);
 assert.equal(api('git/ref/tags/'+tag).object.sha,sha);
 gh(['release','create',tag,...files,'--repo',repo,'--target',sha,'--verify-tag','--title','Market '+manifest.version,'--notes-file',notesFile,'--draft']);
-const release=api('releases/tags/'+tag);assert.equal(release.draft,true);assert.equal(release.prerelease,false);
+const matching=api('releases?per_page=100').filter(r=>r.tag_name===tag);assert.equal(matching.length,1,'Expected exactly one created draft');
+const releaseId=matching[0].id;assert.ok(Number.isSafeInteger(releaseId)&&releaseId>0);
+const release=api('releases/'+releaseId);assert.equal(release.id,releaseId);assert.equal(release.tag_name,tag);assert.equal(release.target_commitish,sha);assert.equal(release.draft,true);assert.equal(release.prerelease,false);
 assert.deepEqual(release.assets.map(a=>a.name).sort(),fs.readdirSync(destination).sort());
 for(const asset of release.assets){const data=fs.readFileSync(path.join(destination,asset.name));assert.equal(asset.size,data.length);assert.equal(asset.digest,'sha256:'+createHash('sha256').update(data).digest('hex'));}
 assert.equal(api('git/ref/tags/'+tag).object.sha,sha);
 assert.equal(api('git/ref/heads/main').object.sha,sha,'Main advanced while draft was prepared');
-gh(['release','edit',tag,'--repo',repo,'--draft=false']);
-const published=api('releases/tags/'+tag);assert.equal(published.draft,false);
+gh(['api','repos/'+repo+'/releases/'+releaseId,'--method','PATCH','--field','draft=false']);
+const published=api('releases/'+releaseId);assert.equal(published.id,releaseId);assert.equal(published.tag_name,tag);assert.equal(published.target_commitish,sha);assert.equal(published.draft,false);
 console.log(JSON.stringify({released:tag,sourceCommit:sha,sourceTree:manifest.sourceTree,assets:release.assets.map(a=>({name:a.name,size:a.size,digest:a.digest}))}));
