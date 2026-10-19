@@ -1,4 +1,4 @@
-FROM node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df AS build
+FROM node:26.12.0-bookworm-slim@sha256:298992629d69bbd5b2b03ad57094d8e4fcb3a8eeb7c4e25d29de656519568913 AS build
 WORKDIR /app
 RUN npm install -g pnpm@11.25.0
 COPY package.json pnpm-lock.yaml ./
@@ -6,7 +6,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build && pnpm prune --prod
 
-FROM node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df
+FROM node:26.12.0-bookworm-slim@sha256:298992629d69bbd5b2b03ad57094d8e4fcb3a8eeb7c4e25d29de656519568913
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=3100 DATA_DIR=/app/data ONION_HOST_FILE=/onion/hostname TOR_SOCKS_URL=socks5h://tor:9050
 WORKDIR /app
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
