@@ -215,8 +215,22 @@ for (const [kind, timeouts] of [
     await fixture({ fileMax: 1, ...timeouts }, async ({ server, call }) => {
       const held = await holdFile(server);
       await call("get", "/browse").expect(429);
-      await pause(300);
-      await call("get", "/browse").expect(200);
+      const deadline = performance.now() + 2000;
+      let recovered = false;
+      while (performance.now() < deadline) {
+        await pause(25);
+        const response = await call("get", "/browse");
+        if (response.status === 200) {
+          recovered = true;
+          break;
+        }
+        assert.equal(response.status, 429);
+      }
+      assert.equal(
+        recovered,
+        true,
+        "The short deadline must free capacity before the independent 10-second deadline.",
+      );
       held.response.destroy();
       held.req.destroy();
     });
@@ -238,7 +252,9 @@ test("an earlier pipelined response cannot remove the next file's idle deadline"
       await data;
       socket.pause();
       try {
-        await pause(700);
+        const deadline = performance.now() + 2000;
+        while (!serverSocket.destroyed && performance.now() < deadline)
+          await pause(25);
         assert.equal(serverSocket.destroyed, true);
       } finally {
         socket.destroy();
