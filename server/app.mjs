@@ -21,6 +21,7 @@ import {
 import { assets, amount, displayAmount } from "./money.mjs";
 import { createPayments, loadConnections } from "./payments.mjs";
 import { privateFields } from "./privacy.mjs";
+import { resourceGuards, localHealthRequest } from "./resources.mjs";
 
 export const categories = [
   "Art & collectibles",
@@ -40,6 +41,7 @@ export function createApp({
   distDir = path.resolve("dist"),
   secureCookies = false,
   limits = true,
+  resourceLimits,
   payments = createPayments({
     connections: loadConnections(
       process.env.BTCPAY_CONFIG || path.join(dataDir, "btcpay.json"),
@@ -49,6 +51,10 @@ export function createApp({
   const db = openDatabase(dataDir);
   const privateData = privateFields(dataDir, db);
   const app = express();
+  const pass = (req, res, next) => next();
+  const resources = limits
+    ? resourceGuards(resourceLimits)
+    : { requests: pass, inflight: pass, files: pass, close: () => {} };
   const filesDir = path.join(dataDir, "files");
   const tmpDir = path.join(dataDir, "tmp");
   mkdirSync(filesDir, { recursive: true, mode: 0o700 });
@@ -200,8 +206,18 @@ export function createApp({
       return res.status(403).json({ error: "Request origin is not allowed." });
     next();
   });
+  app.use((req, res, next) => {
+    if (localHealthRequest(req))
+      return res.set("Cache-Control", "no-store").json({ ok: true });
+    next();
+  });
+  app.use(resources.inflight, resources.requests);
+  app.get("/api/health", (req, res) =>
+    res.set("Cache-Control", "no-store").json({ ok: true }),
+  );
   app.use(express.json({ limit: "64kb" }));
   app.use(cookieParser());
+  let nextSessionCleanup = 0;
   app.use(["/api", "/media"], (req, res, next) => {
     res.set("Cache-Control", "no-store");
     const raw = req.cookies.market_session;
@@ -222,11 +238,14 @@ export function createApp({
       return res
         .status(403)
         .json({ error: "Session verification failed. Reload and try again." });
-    run("DELETE FROM sessions WHERE expires<?", Date.now());
+    const now = Date.now();
+    if (now >= nextSessionCleanup) {
+      run("DELETE FROM sessions WHERE expires<?", now);
+      nextSessionCleanup = now + 60000;
+    }
     next();
   });
   if (limits) app.use("/api", limiter(300, 60000));
-  app.get("/api/health", (req, res) => res.json({ ok: true }));
   app.get("/api/session", (req, res) =>
     res.json({
       user: publicUser(req.user),
@@ -399,7 +418,7 @@ export function createApp({
       }
     },
   );
-  app.get("/media/:id", (req, res) => {
+  app.get("/media/:id", resources.files, (req, res) => {
     const upload = q(
       "SELECT u.*,l.status AS listing_status FROM uploads u JOIN listings l ON l.image_id=u.id WHERE u.id=? AND u.kind='image' AND (l.status='active' OR l.seller_id=? OR ?='admin') ORDER BY CASE WHEN l.status='active' THEN 0 ELSE 1 END LIMIT 1",
       req.params.id,
@@ -855,26 +874,31 @@ export function createApp({
     );
     res.status(201).json({ ok: true });
   });
-  app.get("/api/orders/:id/download", requireUser, (req, res) => {
-    const o = orderFor(req.params.id, req.user);
-    if (
-      o.buyer_id !== req.user.id ||
-      o.kind !== "digital" ||
-      o.status !== "fulfilled"
-    )
-      fail(
-        403,
-        "Download becomes available after the seller confirms payment.",
+  app.get(
+    "/api/orders/:id/download",
+    requireUser,
+    resources.files,
+    (req, res) => {
+      const o = orderFor(req.params.id, req.user);
+      if (
+        o.buyer_id !== req.user.id ||
+        o.kind !== "digital" ||
+        o.status !== "fulfilled"
+      )
+        fail(
+          403,
+          "Download becomes available after the seller confirms payment.",
+        );
+      const file = q(
+        "SELECT * FROM uploads WHERE id=? AND kind='digital'",
+        o.file_id,
       );
-    const file = q(
-      "SELECT * FROM uploads WHERE id=? AND kind='digital'",
-      o.file_id,
-    );
-    if (!file) fail(404, "File is unavailable. Contact the seller.");
-    res
-      .type("application/octet-stream")
-      .download(path.resolve(filesDir, file.id), file.filename);
-  });
+      if (!file) fail(404, "File is unavailable. Contact the seller.");
+      res
+        .type("application/octet-stream")
+        .download(path.resolve(filesDir, file.id), file.filename);
+    },
+  );
   app.post("/api/orders/:id/review", requireUser, (req, res) => {
     const o = orderFor(req.params.id, req.user);
     if (o.buyer_id !== req.user.id || o.status !== "fulfilled")
@@ -938,6 +962,7 @@ export function createApp({
   app.use("/api", (req, res) =>
     res.status(404).json({ error: "Endpoint not found." }),
   );
+  app.use(resources.files);
   app.use(express.static(distDir, { index: false }));
   app.get("/{*path}", (req, res) =>
     res.sendFile(path.join(distDir, "index.html")),
@@ -955,5 +980,14 @@ export function createApp({
           : error.message,
     });
   });
-  return { app, db, pollPayments, syncPayment, close: () => db.close() };
+  return {
+    app,
+    db,
+    pollPayments,
+    syncPayment,
+    close: () => {
+      resources.close();
+      db.close();
+    },
+  };
 }

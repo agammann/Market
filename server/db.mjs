@@ -15,6 +15,7 @@ export function openDatabase(directory) {
       token TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id),
       csrf TEXT NOT NULL, expires INTEGER NOT NULL
     ) STRICT;
+    CREATE INDEX IF NOT EXISTS sessions_expires ON sessions(expires);
     CREATE TABLE IF NOT EXISTS uploads (
       id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES users(id),
       kind TEXT NOT NULL, filename TEXT NOT NULL, size INTEGER NOT NULL,

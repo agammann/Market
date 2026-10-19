@@ -12,7 +12,7 @@ This map connects behavior to source. It describes the reference implementation,
 | Persistence | `server/db.mjs` | SQLite schema, WAL mode and transactions |
 | Payment adapter | `server/payments.mjs`, `money.mjs` | Seller connections, Tor transport, invoice validation and integer amounts |
 | Private fields | `server/privacy.mjs` | AES 256 GCM sealing, context binding, key handling and legacy migration |
-| Request security | `server/security.mjs` | Authentication helpers, validation and request limits |
+| Request security | `server/security.mjs`, `server/resources.mjs` | Authentication helpers, validation, aggregate admission and bounded file transfers |
 | Operator commands | `scripts/admin.mjs`, `health.mjs` | Explicit account promotion, private payment import and internal health check |
 | Deployment | `Dockerfile`, `compose.yaml`, `deploy/` | Reproducible application build and optional Tor service |
 | Evidence | `tests/`, `docs/VERIFICATION.md`, `design/` | Automated checks, verification boundaries and visual development artifacts |
@@ -32,6 +32,8 @@ The app persists that invoice creation was attempted before sending its POST. A 
 The supplied deployment uses Tor as its only inbound route, no public host port, a private app network and no third party frontend assets. It requests no email address and removes photo metadata by reencoding images. It avoids application access logs, but operational output still exists and can contain a service hostname.
 
 Passwords use salted scrypt hashes, sessions use random tokens stored as hashes, and write requests require origin and CSRF checks. Shipping, tracking and message fields are encrypted with per value nonces and authenticated field context. Keys remain accessible to the running server. This is protection against a database copy without the key, not end to end encryption or anonymity against a compromised host. See the complete [privacy boundaries](PRIVACY.md).
+
+Resource admission runs after Host/Origin validation and before JSON parsing or session database work. A constant-key `express-rate-limit` budget bounds aggregate requests without treating the shared Tor peer as an individual user. Separate response and file-transfer capacities reject excess work immediately. Media, protected downloads, static files and the application shell share the file budget. Completion, errors and disconnects release capacity once; idle and total deadlines bound stalled transfers, including pipelined responses on a shared HTTP socket. Session expiry cleanup is throttled, while each authentication lookup still requires an unexpired session. The defaults and retry behavior are documented in [operations](OPERATIONS.md#routine-checks-and-updates).
 
 ## Procedure used to build and verify this reference
 

@@ -40,7 +40,11 @@ For refunds, the seller and buyer arrange and verify the transfer outside Market
 
 ## Routine checks and updates
 
-Inspect `docker compose ps` and privately review bounded logs. Monitor host disk space and Docker volume growth. There is no automatic retention policy or purge job, and application resource limits do not cap persistent storage. Restrict host and Docker access and maintain encrypted backups.
+The application admits at most 1,200 requests per minute and 64 unfinished responses across the service before parsing request bodies or querying sessions. Public media, purchased downloads, static assets and the application shell share 16 concurrent file transfers. Excess work receives HTTP 429 with `Retry-After`; there is no waiting queue. Existing account, authentication and upload limits still apply. These aggregate budgets account for Tor clients sharing the same network peer, so they do not add another per-IP client limit.
+
+File responses retain streaming and range support, with a 120-second socket idle deadline and a 30-minute total transfer deadline. A stalled or aborted transfer releases its capacity. An interrupted large download can be retried. Internal GET/HEAD health checks from the actual loopback socket remain cheap and available when admission is full; forwarding headers cannot grant that exception. External health requests use ordinary admission limits. Expired sessions fail authentication immediately; database removal runs at most once per minute during session requests.
+
+Inspect `docker compose ps` and privately review bounded logs. Monitor host disk space and Docker volume growth. There is no automatic retention policy or purge job for customer records and uploads, and application resource limits do not cap persistent storage. Restrict host and Docker access and maintain encrypted backups.
 
 Before upgrading, record `git rev-parse HEAD` and the installed image IDs with `docker compose images`, review upstream changes and create a consistent backup. Stop the running services before backing up. With services stopped, a routine update is:
 
