@@ -2,6 +2,16 @@
 
 Market is a source reference with no hosted demo or continuing service. These checks use fictional users and products. They are engineering validation, not independent user research or production certification.
 
+## October 18, 2026: request and transfer bounds
+
+The 1.0.1 candidate installed with the frozen lockfile on Node 24.19.0 and pnpm 11.25.0, passed all 22 tests, built the production frontend and reported zero dependency advisories. Six added regressions exercise early aggregate rejection before JSON parsing, recovery without trusting forwarding headers, incomplete request bodies and disconnects, shared media/download/static/application-shell capacity, buyer and unpublished-image access checks, HEAD/cache/range/error responses, idle and total transfer expiry, and pipelined HTTP responses sharing one socket. The unbounded source reproduced the early-admission failure; the first timeout candidate also reproduced the pipelining failure before correction.
+
+Both production Docker images built successfully. A disposable deployment retained the shipped internal app network, read-only application root, dropped capabilities and no published app port. A separate Tor client exposed only a loopback SOCKS verification port. Fictional seller, buyer and moderator identities used the actual onion entry point to register, upload files, approve a listing, check unpublished-image privacy and retrieve the exact buyer-only digital file. Sixteen paused 48 MiB fixture downloads filled the shared file capacity: extra media, static-file and application-shell requests returned 429, ordinary API access remained available, and aborted streams released capacity. Bounded parallel requests exhausted one authenticated client's API quota while the second client's session remained available behind the same Tor service.
+
+The fulfilled order in this resource test was an explicit database fixture, not an invoice or payment proof. No BTCPay service or chain transfer was exercised. A fresh extracted Windows source consumer repeated frozen installation, all 22 tests and the production build. The temporary service, client, volumes and onion identity were removed after verification.
+
+The request-budget, in-flight and file capacities are application resource bounds, not a claim that the network or Tor service can withstand unlimited traffic. Payment-provider and real-chain evidence below retain their original dates and scope.
+
 ## October 8, 2026: bounded v1 check
 
 The v1 candidate installs with the frozen lockfile on Node 24.19.0 and pnpm 11.25.0, passes all 16 tests and builds the production frontend. Available dependency patches were applied, including Sharp 0.35.5 and source-map-js 1.2.2; the dependency audit reported zero advisories at this check. Tests now use temporary system directories, including when the source is extracted outside the development workspace. Market is licensed under MIT.
