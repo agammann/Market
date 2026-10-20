@@ -11,7 +11,7 @@ const sha = "a".repeat(40),
 const env = {
   GITHUB_ACTIONS: "true",
   GITHUB_REPOSITORY: "agammann/Market",
-  GITHUB_EVENT_NAME: "push",
+  GITHUB_EVENT_NAME: "workflow_dispatch",
   GITHUB_REF: "refs/heads/main",
   GITHUB_SHA: sha,
 };
@@ -52,7 +52,7 @@ function fixture(t, options = {}) {
     };
   };
   const state = {
-    ref: options.draft ? sha : null,
+    ref: options.missingTag ? null : sha,
     release: options.draft
       ? {
           id: 123,
@@ -83,10 +83,6 @@ function fixture(t, options = {}) {
     }
     if (route.startsWith("git/matching-refs/"))
       return state.ref ? [{ ref: "refs/tags/" + tag }] : [];
-    if (route === "git/refs" && method === "POST") {
-      state.ref = input.body.sha;
-      return {};
-    }
     if (route === "git/ref/tags/" + tag)
       return { object: { type: "commit", sha: state.ref } };
     if (route === "releases" && method === "POST") {
@@ -142,6 +138,12 @@ test("keeps the returned draft ID when list discovery lags", async (t) => {
     f.state.calls.filter((c) => c.route.startsWith("releases?")).length,
     1,
   );
+});
+
+test("refuses publication until the exact version tag exists", async (t) => {
+  const f = fixture(t, { missingTag: true });
+  await assert.rejects(f.run(), /Create and verify the exact version tag/);
+  assert.ok(f.state.calls.every((c) => c.method === "GET"));
 });
 
 test("resumes a paginated existing draft by uploading only missing assets", async (t) => {
