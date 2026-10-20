@@ -28,8 +28,12 @@ function readRegular(file, limit) {
   try {
     const stat = fs.fstatSync(fd),
       current = fs.lstatSync(file);
+    // Windows lacks O_NOFOLLOW. The descriptor identities and checked snapshot
+    // protect the upload bytes; this does not sandbox ancestor directories.
     assert.ok(
       stat.isFile() &&
+        entry.dev === stat.dev &&
+        entry.ino === stat.ino &&
         current.isFile() &&
         !current.isSymbolicLink() &&
         current.dev === stat.dev &&

@@ -283,3 +283,25 @@ test("a failed source check cleans its private snapshot and performs no GitHub c
   assert.ok(!fs.existsSync(checked));
   assert.equal(f.state.calls.length, 0);
 });
+
+test("rejects a regular file replaced between initial admission and opening", async (t) => {
+  const f = fixture(t),
+    file = path.join(f.destination, "Market-1.0.2-source.zip");
+  const open = fs.openSync;
+  let replaced = false;
+  fs.openSync = function (name, ...args) {
+    if (name === file && !replaced) {
+      replaced = true;
+      fs.renameSync(file, file + ".previous");
+      fs.writeFileSync(file, "replacement source");
+    }
+    return open.call(fs, name, ...args);
+  };
+  try {
+    await assert.rejects(f.run(), /changed during admission/);
+  } finally {
+    fs.openSync = open;
+  }
+  assert.ok(replaced);
+  assert.equal(f.state.calls.length, 0);
+});
