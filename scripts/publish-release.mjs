@@ -176,7 +176,7 @@ export async function publishRelease({
   const sha = env.GITHUB_SHA;
   assert.equal(env.GITHUB_ACTIONS, "true");
   assert.equal(env.GITHUB_REPOSITORY, repo);
-  assert.equal(env.GITHUB_EVENT_NAME, "push");
+  assert.equal(env.GITHUB_EVENT_NAME, "workflow_dispatch");
   assert.equal(env.GITHUB_REF, "refs/heads/main");
   assert.match(sha || "", /^[a-f0-9]{40}$/);
   const { manifest, names, assets } = snapshotPayload(destination, checkSource);
@@ -258,16 +258,11 @@ export async function publishRelease({
   let release = matching[0];
   if (release) checkRelease(release);
   const refs = await api("git/matching-refs/tags/" + tag);
-  if (refs.some((ref) => ref.ref === "refs/tags/" + tag)) await checkTag();
-  else {
-    assert.ok(!release, "Existing draft has no version tag");
-    await checkMain();
-    await api("git/refs", {
-      method: "POST",
-      body: { ref: "refs/tags/" + tag, sha },
-    });
-    await checkTag();
-  }
+  assert.ok(
+    refs.some((ref) => ref.ref === "refs/tags/" + tag),
+    "Create and verify the exact version tag before dispatching publication",
+  );
+  await checkTag();
   if (!release) {
     await checkMain();
     // Keep the creation response: a new draft may not appear in list results yet.
