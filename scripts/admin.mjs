@@ -1,10 +1,39 @@
 import path from "node:path";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import {
+  closeSync,
+  existsSync,
+  fsyncSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { openDatabase } from "../server/db.mjs";
 import { validateConnections } from "../server/payments.mjs";
 const [command, username, configPath] = process.argv.slice(2);
 const dataDir = path.resolve(process.env.DATA_DIR || "data");
 const db = openDatabase(dataDir);
+function saveConnections(file, connections) {
+  const temporary = path.join(dataDir, `.btcpay-${randomBytes(12).toString("hex")}.tmp`);
+  let descriptor;
+  try {
+    descriptor = openSync(temporary, "wx", 0o600);
+    writeFileSync(descriptor, JSON.stringify(connections, null, 2));
+    fsyncSync(descriptor);
+    closeSync(descriptor);
+    descriptor = undefined;
+    renameSync(temporary, file);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+    try {
+      unlinkSync(temporary);
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
+}
 try {
   if (!["promote", "connect"].includes(command) || !username)
     throw Error(
@@ -52,7 +81,7 @@ try {
       ...old.filter((c) => c.sellerId !== user.id),
       entry,
     ]);
-    writeFileSync(file, JSON.stringify(next, null, 2), { mode: 0o600 });
+    saveConnections(file, next);
     console.log(
       "Connection saved. Restart the application to apply it. Credentials were not printed.",
     );
