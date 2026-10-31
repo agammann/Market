@@ -270,6 +270,9 @@ export function createApp({
   const authGlobal = limits
     ? limiter(80, 15 * 60000, () => "global")
     : (req, res, next) => next();
+  const passwordChangeLimit = limits
+    ? limiter(20, 15 * 60000, (req) => req.user.id)
+    : (req, res, next) => next();
   const newSession = (user, res, req) => {
     if (req.session)
       run("DELETE FROM sessions WHERE token=?", req.session.token);
@@ -340,7 +343,7 @@ export function createApp({
   app.post(
     "/api/account/password",
     requireUser,
-    authLimit,
+    passwordChangeLimit,
     async (req, res) => {
       if (!(await passwordMatches(req.body.currentPassword, req.user.password)))
         fail(403, "Current password is incorrect.");
