@@ -11,7 +11,7 @@ const root = path.resolve(import.meta.dirname, "..");
 const notes = (version) =>
   "Market " +
   version +
-  " is a self-hosted reference marketplace for physical goods and digital downloads.\n\nThe source ZIP includes the application, MIT license, installation, developer and recovery instructions. It requires Docker Linux for the optional Tor deployment, or Node 24.19.0 and pnpm 11.25.0 for local development. Each seller supplies a separate supported BTCPay connection. No payment service or hosted marketplace is included.\n\nVerify the source ZIP with SHA256SUMS before extracting it. RELEASE.json records the exact source commit, tree and file hashes. Tests use isolated fixtures; actual chain verification is limited to disposable Bitcoin regtest and Monero fakechain. See docs/VERIFICATION.md for observed results and limits.";
+  " is a self-hosted reference marketplace for physical goods and digital downloads.\n\nThe source ZIP includes the application, MIT license, installation, developer and recovery instructions. It requires Docker Linux for the optional Tor deployment, or Node 24.19.0+ within Node 24 or Node 26.13.1+ within Node 26, and pnpm 11.25.0 for local development. Each seller supplies a separate supported BTCPay connection. No payment service or hosted marketplace is included.\n\nVerify the source ZIP with SHA256SUMS before extracting it. RELEASE.json records the exact source commit, tree and file hashes. Tests use isolated fixtures; actual chain verification is limited to disposable Bitcoin regtest and Monero fakechain. See docs/VERIFICATION.md for observed results and limits.";
 
 function readRegular(file, limit) {
   const entry = fs.lstatSync(file);
