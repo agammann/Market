@@ -5,6 +5,21 @@ on:
     tags: ['v*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Prepare the tag only, or publish its verified source assets
+        required: true
+        type: choice
+        default: prepare-tag
+        options: [prepare-tag, publish]
+      expected_sha:
+        description: Full reviewed main commit SHA (40 lowercase hex characters)
+        required: true
+        type: string
+      expected_version:
+        description: Exact package.json version at that commit (for example 1.0.3)
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -80,6 +95,10 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write
+    env:
+      MARKET_RELEASE_MODE: ${{ inputs.mode }}
+      MARKET_RELEASE_SHA: ${{ inputs.expected_sha }}
+      MARKET_RELEASE_VERSION: ${{ inputs.expected_version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -87,13 +106,23 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.19.0
+      - name: Validate the reviewed release commit and version
+        run: node scripts/prepare-release-tag.mjs --validate
+      - name: Prepare the current version tag without publishing
+        if: inputs.mode == 'prepare-tag'
+        run: node scripts/prepare-release-tag.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: inputs.mode == 'publish'
         with:
           name: market-v1-source
           path: dist-release
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        if: inputs.mode == 'publish'
         with:
           python-version: '3.12'
       - run: node scripts/publish-release.mjs dist-release
+        if: inputs.mode == 'publish'
         env:
           GH_TOKEN: ${{ github.token }}
