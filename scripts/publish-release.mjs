@@ -126,7 +126,7 @@ function snapshotPayload(destination, checkSource) {
   return { manifest, names, assets };
 }
 
-function githubRequest(env) {
+export function githubRequest(env) {
   const token = env.GH_TOKEN || env.GITHUB_TOKEN;
   assert.ok(token, "A GitHub workflow token is required");
   return async (route, { method = "GET", body, upload = false } = {}) => {

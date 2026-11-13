@@ -3,6 +3,7 @@
 ## 1.0.3
 
 - Ship the request dependency fixes already verified on main: body-parser 2.4.0, multer 2.5.0, ip-address 10.7.5, and qs 6.17.1. These replace versions in the 1.0.2 source archive with known denial of service advisories.
+- Update Vite to 8.3.7 to address GHSA-p4f5-76q4-ffq7 in the development tooling.
 - Apply the password change limit to the authenticated account, including attempts across sessions, without accepting a body parameter as the account identifier.
 - Update the Docker runtime to supported Node 24.22.3, React Router to 7.18.5, and React and React DOM together to 19.3.1. Group future React dependency updates.
 - Verify marketplace routes in a disposable browser before publication, alongside the existing source, archive consumer, and Docker checks.
