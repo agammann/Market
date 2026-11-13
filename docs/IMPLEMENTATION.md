@@ -61,7 +61,7 @@ For a change, preserve existing tests that exercise meaningful behavior, add cov
 
 ## V1 source release
 
-The supported delivery is source: a Node 24.19.0+ (within Node 24) or Node 26.13.1+ (within Node 26) application and an optional Docker Linux Tor deployment. Install pnpm 11.25.0 for local builds. Python 3.12 or newer and Git are needed only to build and check release archives. The Dockerfiles pin their base images; Tor packages are installed from Debian's repository at build time, so an image rebuild can incorporate package updates. Record image IDs when operating and restoring an installation.
+The supported delivery is source, with an optional Docker Linux Tor deployment. The published 1.0.3 archive supports Node 24.19.0+ within Node 24 and uses Node 24 in Docker. The current checkout and a future release built from it also support Node 26.13.1+ within Node 26 and use Node 26 in Docker. Install pnpm 11.25.0 for local builds. Python 3.12 or newer and Git are needed only to build and check release archives. The Dockerfiles pin their base images; Tor packages are installed from Debian's repository at build time, so an image rebuild can incorporate package updates. Record image IDs when operating and restoring an installation.
 
 After committing reviewed changes and passing the checks, build a new release directory:
 

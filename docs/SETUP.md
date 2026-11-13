@@ -4,7 +4,7 @@ Market is a reference application. There is no hosted demo, included operator ad
 
 ## 1. Obtain and check the source
 
-For a stable v1, download `Market-1.0.3-source.zip` and `SHA256SUMS` from [Releases](https://github.com/agammann/Market/releases). In PowerShell, run `Get-FileHash .\Market-1.0.3-source.zip -Algorithm SHA256` and compare it with the ZIP's line in `SHA256SUMS`. Extract the archive into a new folder and open a terminal in `Market-1.0.3`. The included `RELEASE.json` identifies the exact source and files. The archive includes no accounts, wallets, payment keys or built dependencies.
+For a stable v1, download `Market-1.0.3-source.zip` and `SHA256SUMS` from [Releases](https://github.com/agammann/Market/releases). In PowerShell, run `Get-FileHash .\Market-1.0.3-source.zip -Algorithm SHA256` and compare it with the ZIP's line in `SHA256SUMS`. Extract the archive into a new folder and open a terminal in `Market-1.0.3`. The included `RELEASE.json` identifies the exact source and files. The archive includes no accounts, wallets, payment keys or built dependencies. The published 1.0.3 archive supports Node 24.19.0 or later within Node 24 and its Docker image uses Node 24. Node 26 support described for the current checkout below is not in that archive.
 
 Alternatively, clone the repository for development with the commands below. Local development uses Node.js 24.19.0 or later within Node 24, or Node 26.13.1 or later within Node 26. CI tests both majors on Linux and Windows; other major versions are not supported. Use the pinned pnpm version used by the Dockerfile and CI:
 
