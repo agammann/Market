@@ -29,7 +29,9 @@ The application does not hold wallet keys, pool customer balances or provide esc
 
 The v1 source release is available under [Releases](https://github.com/agammann/Market/releases). Extract `Market-1.0.3-source.zip`, verify its SHA256 against `SHA256SUMS`, and open a terminal in the extracted `Market-1.0.3` folder. `RELEASE.json` records the source commit, tree and file hashes. The ZIP includes source and documentation; Docker or the commands below build the application for your machine.
 
-The published 1.0.3 archive supports Node 24.19.0 or later within Node 24 and uses Node 24 in its Docker image. The current repository checkout also supports Node 26.13.1 or later within Node 26 and uses Node 26 in its Docker image; these changes are not in the published 1.0.3 archive. CI tests both supported majors on Linux and Windows. Local development requires pnpm 11.25.0. Docker users do not need Node or pnpm installed on the host. Node 25 and other majors are not supported.
+The 1.0.4 source candidate packages the Node 26 support already on main. It remains unpublished while the required high-severity dependency audit fails on the unpatched picomatch advisory. The available release remains 1.0.3.
+
+The published 1.0.3 archive supports Node 24.19.0 or later within Node 24 and uses Node 24 in its Docker image. The 1.0.4 candidate also supports Node 26.13.1 or later within Node 26 and uses Node 26 in its Docker image. CI tests both supported majors on Linux and Windows. Local development requires pnpm 11.25.0. Docker users do not need Node or pnpm installed on the host. Node 25 and other majors are not supported.
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -39,7 +41,7 @@ pnpm build
 
 These commands install dependencies, run isolated tests and build frontend files. They do not start an onion service. The suite creates fictional data in temporary test directories and cleans it up afterward.
 
-To explore the interface locally, run `pnpm start` and `pnpm dev` in separate terminals. Development listens on loopback. Stop the processes when finished. There are no default accounts, seeded live listings or payment credentials.
+After the build, run `pnpm start` and open **http://127.0.0.1:3100/**. This single loopback process serves the built interface and API. For frontend editing with hot reload, keep that API process running and run `pnpm dev` in a second terminal, then open `http://127.0.0.1:5173/`. Stop the processes when finished. There are no default accounts, seeded live listings or payment credentials.
 
 ## Optional: run your own onion instance
 
