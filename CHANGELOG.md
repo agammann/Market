@@ -2,7 +2,7 @@
 
 ## 1.0.4
 
-Unpublished source candidate. The required high-severity audit remains blocked by the unpatched picomatch advisory.
+Unpublished source candidate. The November 19 dependency audit reported zero advisories.
 
 - Prepare versioned source delivery for the Node 26 support and pinned Docker base already on main, retaining the supported Node 24 path.
 - Document the single-server local workflow after building, alongside the optional Vite hot-reload workflow.

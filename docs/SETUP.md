@@ -2,7 +2,7 @@
 
 Market is a reference application. There is no hosted demo, included operator address, default account, payment service or wallet. The two paths below serve different purposes: local development lets you inspect the software; the optional Docker path starts your own Tor service. Nothing in CI deploys it.
 
-Version 1.0.4 is an unpublished source candidate for the Node 26 support already on main. The required high-severity audit is held by the unpatched picomatch advisory. Version 1.0.3 remains the available release.
+Version 1.0.4 is an unpublished source candidate for the Node 26 support already on main. Version 1.0.3 is the available release.
 
 ## 1. Obtain and check the source
 

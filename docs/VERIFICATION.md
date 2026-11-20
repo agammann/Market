@@ -10,7 +10,11 @@ The actual loopback browser workflow used separate fictional seller, moderator a
 
 A separate controlled invoice fixture produced one fulfilled order and an exact 273-byte buyer download. The original seller received HTTP 403. Its eligibility message now states that only the buyer of a fulfilled digital order can download the file. The existing seller-denial assertion failed with the earlier message and passed after correction.
 
-The full high-threshold dependency audit reports one high-severity picomatch advisory with no published patch. The production-only audit reports zero advisories. The full audit remains the required publication gate, so 1.0.4 is an unpublished candidate. Provider, lockfile and migration code are unchanged. The dated payment and Tor integration evidence below retains its original scope.
+At the November 17 check, the full high-threshold dependency audit reported one high severity Picomatch advisory with no published patch. The production-only audit reported zero advisories at that check. Provider, lockfile and migration code are unchanged. The dated payment and Tor integration evidence below retains its original scope.
+
+## November 19, 2026 dependency audit recheck
+
+GitHub withdrew the Picomatch advisory on November 18. The required dependency audit reported zero advisories on the candidate lockfile when rerun on November 19. The source candidate remains a draft. [Advisory record](https://github.com/advisories/GHSA-fc5q-39xc-vjpf)
 
 ## October 18, 2026: request and transfer bounds
 
