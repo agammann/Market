@@ -890,7 +890,7 @@ export function createApp({
       )
         fail(
           403,
-          "Download becomes available after the seller confirms payment.",
+          "Only the buyer of a fulfilled digital order can download the file.",
         );
       const file = q(
         "SELECT * FROM uploads WHERE id=? AND kind='digital'",

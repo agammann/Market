@@ -1,5 +1,14 @@
 # Changes
 
+## 1.0.4
+
+Unpublished source candidate. The November 19 dependency audit reported zero advisories.
+
+- Prepare versioned source delivery for the Node 26 support and pinned Docker base already on main, retaining the supported Node 24 path.
+- Document the single-server local workflow after building, alongside the optional Vite hot-reload workflow.
+- Clarify the eligibility message for digital downloads.
+- Record the current local and container checks separately from historical payment integrations.
+
 ## 1.0.3
 
 - Ship the request dependency fixes already verified on main: body-parser 2.4.0, multer 2.5.0, ip-address 10.7.5, and qs 6.17.1. These replace versions in the 1.0.2 source archive with known denial of service advisories.

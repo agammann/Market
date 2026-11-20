@@ -187,7 +187,10 @@ test("media, paid files and SPA share bounded streaming capacity without changin
     assert.match(download.headers["content-disposition"], /attachment/);
     await call("get", "/api/orders/paid/download")
       .set("Cookie", users.seller)
-      .expect(403);
+      .expect(403)
+      .expect({
+        error: "Only the buyer of a fulfilled digital order can download the file.",
+      });
     await call("get", "/api/orders/paid/download")
       .set("Cookie", users.other)
       .expect(404);

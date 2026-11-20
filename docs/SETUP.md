@@ -2,6 +2,8 @@
 
 Market is a reference application. There is no hosted demo, included operator address, default account, payment service or wallet. The two paths below serve different purposes: local development lets you inspect the software; the optional Docker path starts your own Tor service. Nothing in CI deploys it.
 
+Version 1.0.4 is an unpublished source candidate for the Node 26 support already on main. Version 1.0.3 is the available release.
+
 ## 1. Obtain and check the source
 
 For a stable v1, download `Market-1.0.3-source.zip` and `SHA256SUMS` from [Releases](https://github.com/agammann/Market/releases). In PowerShell, run `Get-FileHash .\Market-1.0.3-source.zip -Algorithm SHA256` and compare it with the ZIP's line in `SHA256SUMS`. Extract the archive into a new folder and open a terminal in `Market-1.0.3`. The included `RELEASE.json` identifies the exact source and files. The archive includes no accounts, wallets, payment keys or built dependencies. The published 1.0.3 archive supports Node 24.19.0 or later within Node 24 and its Docker image uses Node 24. Node 26 support described for the current checkout below is not in that archive.
@@ -23,21 +25,23 @@ Expected results: all tests pass and Vite writes `dist/`. Tests use temporary fi
 
 ## 2. Explore locally without Tor hosting
 
-In one terminal in the cloned directory:
+After `pnpm build`, run one server from the cloned or extracted directory.
 
 ```powershell
 pnpm start
 ```
 
-In a second terminal in the same directory:
+Open **http://127.0.0.1:3100/**. The API serves the built frontend on the same loopback origin, so this path needs only one terminal.
+
+For frontend editing with hot reload, keep the API running on port 3100 and start Vite in a second terminal.
 
 ```powershell
 pnpm dev
 ```
 
-Open `http://127.0.0.1:5173`. Vite proxies `/api` and `/media` to the API on loopback port 3100. Use this exact origin; if Vite chooses another port because 5173 is occupied, stop the conflicting process or deliberately configure the development origins. Do not bind this development server to a public interface.
+Open `http://127.0.0.1:5173`. Vite proxies `/api` and `/media` to the API on loopback port 3100. Use this exact origin; if Vite chooses another port because 5173 is occupied, stop the conflicting process or deliberately configure the development origins. Keep both local servers on loopback.
 
-Register a fictional username and password. To give that account the Admin interface, run from a third terminal in the same directory:
+Register a fictional username and password. To give that account the Admin interface, run from a separate terminal in the same directory:
 
 ```powershell
 node scripts/admin.mjs promote YOUR_USERNAME
@@ -45,7 +49,7 @@ node scripts/admin.mjs promote YOUR_USERNAME
 
 Reload the page. You can inspect account, seller and moderation flows. Orders require an operator configured BTCPay connection; the UI does not contain a pretend payment or manual settlement switch. Automated tests exercise payment outcomes without sending money.
 
-Press Ctrl+C in both running terminals when finished. Local account data and uploads remain in the ignored `data/` directory. These are separate from Docker volumes. `pnpm test` does not clear your local development database.
+Press Ctrl+C in each terminal you started when finished. Local account data and uploads remain in the ignored `data/` directory. These are separate from Docker volumes. `pnpm test` does not clear your local development database.
 
 ## 3. Optional: start your own onion service
 

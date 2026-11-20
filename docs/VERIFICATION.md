@@ -2,6 +2,20 @@
 
 Market is a source reference with no hosted demo or continuing service. These checks use fictional users and products. They are engineering validation, not independent user research or production certification.
 
+## November 17, 2026 local checks
+
+The pre-candidate main commit `589d0b57` installed with the frozen lockfile on Node 24.19.0 and pnpm 11.25.0, passed all 67 tests, built the frontend and passed the existing isolated browser-route smoke check. Its exact current-main source archive passed the package checker and fresh install/test/build consumer. This local archive is separate from the published 1.0.3 archive. Both production images built, and the app's existing smoke check passed with no network, a read-only root and disposable storage. No Tor service was started.
+
+The actual loopback browser workflow used separate fictional seller, moderator and buyer accounts. A digital product and image remained visible to the pending seller and moderator, hidden from anonymous visitors, then appeared in the catalog after approval. Checkout without a configured seller payment service showed the setup requirement, kept all seven items in stock and created zero orders. Restart preserved the buyer session and published catalog.
+
+A separate controlled invoice fixture produced one fulfilled order and an exact 273-byte buyer download. The original seller received HTTP 403. Its eligibility message now states that only the buyer of a fulfilled digital order can download the file. The existing seller-denial assertion failed with the earlier message and passed after correction.
+
+At the November 17 check, the full high-threshold dependency audit reported one high severity Picomatch advisory with no published patch. The production-only audit reported zero advisories at that check. Provider, lockfile and migration code are unchanged. The dated payment and Tor integration evidence below retains its original scope.
+
+## November 19, 2026 dependency audit recheck
+
+GitHub withdrew the Picomatch advisory on November 18. The required dependency audit reported zero advisories on the candidate lockfile when rerun on November 19. The source candidate remains a draft. [Advisory record](https://github.com/advisories/GHSA-fc5q-39xc-vjpf)
+
 ## October 18, 2026: request and transfer bounds
 
 The 1.0.1 candidate installed with the frozen lockfile on Node 24.19.0 and pnpm 11.25.0, passed all 22 tests, built the production frontend and reported zero dependency advisories. Six added regressions exercise early aggregate rejection before JSON parsing, recovery without trusting forwarding headers, incomplete request bodies and disconnects, shared media/download/static/application-shell capacity, buyer and unpublished-image access checks, HEAD/cache/range/error responses, idle and total transfer expiry, and pipelined HTTP responses sharing one socket. The unbounded source reproduced the early-admission failure; the first timeout candidate also reproduced the pipelining failure before correction.
